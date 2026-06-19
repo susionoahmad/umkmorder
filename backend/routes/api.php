@@ -79,3 +79,42 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifyActiveTenant::clas
     Route::post('/upload/qris', [UploadController::class, 'uploadQris']);
     Route::post('/upload/product-image', [UploadController::class, 'uploadProductImage']);
 });
+
+// ==========================================
+// Rute untuk Super Admin (SaaS Panel)
+// ==========================================
+Route::middleware(['auth:sanctum', 'super_admin'])->prefix('admin')->group(function () {
+    // Dashboard Stats & Activities
+    Route::get('/dashboard/stats', [\App\Http\Controllers\Admin\DashboardController::class, 'stats']);
+    Route::get('/dashboard/activities', [\App\Http\Controllers\Admin\DashboardController::class, 'activities']);
+
+    // Tenant Management
+    Route::get('/tenants', [\App\Http\Controllers\Admin\TenantController::class, 'index']);
+    Route::get('/tenants/{tenant}', [\App\Http\Controllers\Admin\TenantController::class, 'show']);
+    Route::put('/tenants/{tenant}', [\App\Http\Controllers\Admin\TenantController::class, 'update']);
+    Route::post('/tenants/{tenant}/suspend', [\App\Http\Controllers\Admin\TenantController::class, 'suspend']);
+    Route::post('/tenants/{tenant}/activate', [\App\Http\Controllers\Admin\TenantController::class, 'activate']);
+    Route::post('/tenants/{tenant}/reset-password', [\App\Http\Controllers\Admin\TenantController::class, 'resetPassword']);
+    Route::post('/tenants/{tenant}/impersonate', [\App\Http\Controllers\Admin\TenantController::class, 'impersonate']);
+
+    // Subscriptions Management
+    Route::get('/subscriptions', [\App\Http\Controllers\Admin\SubscriptionController::class, 'index']);
+    Route::post('/subscriptions', [\App\Http\Controllers\Admin\SubscriptionController::class, 'store']);
+    Route::put('/subscriptions/{subscription}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'update']);
+
+    // Plans Management
+    Route::apiResource('/plans', \App\Http\Controllers\Admin\PlanController::class);
+
+    // Billing Invoices Management
+    Route::get('/billing-invoices', [\App\Http\Controllers\Admin\BillingInvoiceController::class, 'index']);
+    Route::post('/billing-invoices', [\App\Http\Controllers\Admin\BillingInvoiceController::class, 'store']);
+    Route::put('/billing-invoices/{invoice}', [\App\Http\Controllers\Admin\BillingInvoiceController::class, 'update']);
+
+    // Support Directory & Internal Notes
+    Route::get('/support/tenants', [\App\Http\Controllers\Admin\SupportController::class, 'tenants']);
+    Route::put('/support/tenants/{tenant}/notes', [\App\Http\Controllers\Admin\SupportController::class, 'updateNotes']);
+
+    // Settings
+    Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'show']);
+    Route::put('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update']);
+});

@@ -13,3 +13,6 @@ Schedule::command('catalog:cleanup-visits')->weeklyOn(0, '02:00');
 
 // Auto-expire draft orders hourly
 Schedule::command('orders:expire-drafts')->hourly();
+
+// Check expired trials and subscriptions daily
+Schedule::command('subscriptions:check-expired')->daily();

@@ -88,6 +88,48 @@ const routes = [
     name: 'order-success',
     component: OrderSuccess,
   },
+  {
+    path: '/admin',
+    component: () => import('@/views/Admin/Layout.vue'),
+    meta: { requiresAdmin: true },
+    children: [
+      {
+        path: '',
+        name: 'admin-dashboard',
+        component: () => import('@/views/Admin/Dashboard.vue'),
+      },
+      {
+        path: 'tenants',
+        name: 'admin-tenants',
+        component: () => import('@/views/Admin/Tenants.vue'),
+      },
+      {
+        path: 'subscriptions',
+        name: 'admin-subscriptions',
+        component: () => import('@/views/Admin/Subscriptions.vue'),
+      },
+      {
+        path: 'plans',
+        name: 'admin-plans',
+        component: () => import('@/views/Admin/Plans.vue'),
+      },
+      {
+        path: 'billing',
+        name: 'admin-billing',
+        component: () => import('@/views/Admin/Billing.vue'),
+      },
+      {
+        path: 'support',
+        name: 'admin-support',
+        component: () => import('@/views/Admin/Support.vue'),
+      },
+      {
+        path: 'settings',
+        name: 'admin-settings',
+        component: () => import('@/views/Admin/Settings.vue'),
+      },
+    ],
+  },
 ];
 
 const router = createRouter({
@@ -98,10 +140,28 @@ const router = createRouter({
 router.beforeEach((to, _, next) => {
   const authStore = useAuthStore();
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next({ name: 'login', query: { redirect: to.fullPath } });
+  if (to.meta.requiresAdmin) {
+    if (!authStore.isAuthenticated) {
+      next({ name: 'login', query: { redirect: to.fullPath } });
+    } else if (authStore.user?.role !== 'super_admin') {
+      next('/dashboard');
+    } else {
+      next();
+    }
+  } else if (to.meta.requiresAuth) {
+    if (authStore.isAuthenticated && authStore.user?.role === 'super_admin') {
+      next('/admin');
+    } else if (!authStore.isAuthenticated) {
+      next({ name: 'login', query: { redirect: to.fullPath } });
+    } else {
+      next();
+    }
   } else if (to.meta.guest && authStore.isAuthenticated) {
-    next('/dashboard');
+    if (authStore.user?.role === 'super_admin') {
+      next('/admin');
+    } else {
+      next('/dashboard');
+    }
   } else {
     next();
   }

@@ -17,10 +17,14 @@ class Tenant extends Model
         'address',
         'subscription_plan',
         'is_active',
+        'trial_ends_at',
+        'subscription_status',
+        'support_notes',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'trial_ends_at' => 'datetime',
     ];
 
     public function catalogSetting()
@@ -66,5 +70,15 @@ class Tenant extends Model
     public function whatsappLogs()
     {
         return $this->hasMany(WhatsAppLog::class);
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function billingInvoices()
+    {
+        return $this->hasMany(BillingInvoice::class);
     }
 }

@@ -20,6 +20,24 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Auto logout on 401 — token expired or invalid
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Don't redirect if already on login page or for the logout endpoint itself
+      const url: string = error.config?.url ?? '';
+      if (!url.includes('/login') && !url.includes('/logout')) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('auth_tenant');
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export function uploadFile(endpoint: string, file: File, fieldName = 'file') {
   const formData = new FormData();
   formData.append(fieldName, file);

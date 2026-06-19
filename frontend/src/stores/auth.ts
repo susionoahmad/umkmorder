@@ -12,6 +12,7 @@ export interface AuthTenant {
   id: number;
   name: string;
   slug: string;
+  subscription_plan?: string | null;
   catalog_setting?: {
     id: number;
     tenant_id: number;
@@ -39,6 +40,11 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state) => !!state.token,
     role: (state) => state.user?.role || null,
+    isPro: (state) => {
+      const plan = (state.tenant as any)?.subscription_plan ?? 'free';
+      return plan === 'pro' || plan === 'business';
+    },
+    subscriptionPlan: (state) => (state.tenant as any)?.subscription_plan ?? 'free',
   },
   actions: {
     async login(credentials: { email: string; password: string; }) {

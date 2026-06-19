@@ -492,9 +492,40 @@
           </div>
         </div>
 
-        <div>
+        <!-- QR Code: Locked for Free plan -->
+        <div class="relative">
           <label class="block text-sm font-semibold text-slate-400 mb-3">QR Code Katalog</label>
-          <div class="flex flex-col sm:flex-row gap-6 items-start">
+
+          <!-- FREE PLAN LOCK -->
+          <div v-if="!authStore.isPro"
+            class="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-slate-950/70 p-6"
+          >
+            <!-- blurred preview -->
+            <div class="flex flex-col sm:flex-row gap-6 items-start opacity-30 blur-sm pointer-events-none select-none" aria-hidden="true">
+              <div class="w-48 h-48 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center shrink-0">
+                <span class="text-6xl">📷</span>
+              </div>
+              <div class="flex flex-col gap-3 pt-1">
+                <div class="w-40 h-10 rounded-xl bg-slate-700"></div>
+                <div class="w-36 h-10 rounded-xl bg-slate-700"></div>
+              </div>
+            </div>
+            <!-- Lock overlay -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-4">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/30">
+                🔒
+              </div>
+              <p class="text-sm font-bold text-slate-200">QR Code Katalog — Fitur Pro</p>
+              <p class="text-xs text-slate-400 max-w-xs">Upgrade ke Paket Pro untuk membuat & mengunduh QR Code katalog Anda.</p>
+              <router-link to="/dashboard/settings"
+                class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all shadow-md shadow-indigo-500/30 hover:-translate-y-0.5"
+                style="background: linear-gradient(135deg, #6366f1, #8b5cf6)"
+              >⚡ Upgrade ke Pro</router-link>
+            </div>
+          </div>
+
+          <!-- PRO: QR Code normal -->
+          <div v-else class="flex flex-col sm:flex-row gap-6 items-start">
             <div class="w-48 h-48 bg-slate-950 border border-slate-700 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
               <div v-if="qrLoading" class="flex flex-col items-center gap-2">
                 <div class="w-8 h-8 border-3 border-t-transparent rounded-full animate-spin theme-spinner"></div>
@@ -533,6 +564,7 @@ import { useAuthStore } from '@/stores/auth';
 
 const authStore = useAuthStore();
 const originalTheme = ref('default');
+
 
 const isLoading   = ref(true);
 const isSaving    = ref(false);
@@ -926,7 +958,7 @@ function shareViaWhatsApp() {
 }
 
 async function loadQrCode() {
-  if (!form.value.slug) return;
+  if (!form.value.slug || !authStore.isPro) return;
   qrLoading.value = true; qrImage.value = null;
   try {
     const res = await api.get('/catalog/qr');

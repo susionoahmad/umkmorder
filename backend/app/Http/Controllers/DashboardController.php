@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Receivable;
+use App\Services\SubscriptionPlanService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -15,6 +16,10 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private SubscriptionPlanService $subscriptionPlans,
+    ) {}
+
     public function index(): JsonResponse
     {
         // All queries auto-scoped to authenticated tenant via BelongsToTenant
@@ -91,6 +96,7 @@ class DashboardController extends Controller
                 'confirmed_orders'     => $confirmedOrders,
                 'overdue_receivables'  => $overdueReceivables,
                 'conversion_rate'      => $conversionRate,
+                'subscription_usage'   => $this->subscriptionPlans->usageForTenant(request()->user()->tenant),
                 'visitors_vs_orders'   => $visitorsVsOrders,
                 'receivables_trend'    => $receivablesTrend,
                 'recent_orders'        => $recentOrders,
@@ -103,6 +109,14 @@ class DashboardController extends Controller
      */
     public function catalogAnalytics(Request $request): JsonResponse
     {
+        if (!$this->subscriptionPlans->canAccessCatalogAnalytics($request->user()->tenant)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Statistik Pengunjung Katalog hanya tersedia untuk Paket Pro. Upgrade sekarang untuk mengakses fitur ini.',
+                'upgrade_required' => true,
+            ], 403);
+        }
+
         $tenantId = $request->user()->tenant_id;
         $range    = $request->query('range', '7days');
         $dateFrom = $request->query('date_from');

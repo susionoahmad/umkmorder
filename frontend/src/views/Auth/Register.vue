@@ -493,17 +493,17 @@ const planOptions = [
     price: 'Rp 0/bln',
     badge: '',
     badgeColor: '',
-    desc: 'Cocok untuk memulai dan memvalidasi bisnis online Anda.',
-    features: ['1 Katalog Online', 'Hingga 20 Produk', 'WhatsApp Order', 'Dashboard Dasar'],
+    desc: 'Untuk UMKM yang baru mulai go online.',
+    features: ['1 Katalog Online', '20 Produk Aktif', '100 Order per Bulan', 'WhatsApp Order', 'Dashboard Dasar'],
   },
   {
     value: 'pro',
     name: 'Pro',
-    price: 'Rp 49rb/bln',
-    badge: '🔥 Populer',
+    price: 'Rp 49.000/bln',
+    badge: '⭐ Paling Populer',
     badgeColor: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
     desc: 'Untuk UMKM aktif yang ingin tumbuh lebih cepat.',
-    features: ['Produk Tak Terbatas', 'Manajemen Piutang', 'Laporan & Analitik', 'Notifikasi WA Otomatis'],
+    features: ['Produk Aktif Tak Terbatas', 'Order Tak Terbatas', 'Manajemen Piutang', 'Reminder WhatsApp', 'Laporan Penjualan'],
   },
 ];
 </script>

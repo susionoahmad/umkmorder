@@ -27,6 +27,56 @@
         </div>
       </div>
 
+      <!-- Subscription Usage -->
+      <div v-if="subscriptionUsage" class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-md backdrop-blur-md">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div class="space-y-1">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Paket Saat Ini</p>
+            <h3 class="text-2xl font-black text-slate-100">{{ subscriptionUsage.plan_label }}</h3>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-4 flex-1 md:max-w-2xl">
+            <div class="rounded-xl bg-slate-950/60 border border-slate-800 p-4">
+              <div class="flex items-center justify-between text-sm font-bold">
+                <span class="text-slate-300">Produk Aktif</span>
+                <span class="text-slate-100">{{ formatLimit(subscriptionUsage.active_products.used, subscriptionUsage.active_products.limit) }}</span>
+              </div>
+              <div class="mt-3 h-2 rounded-full bg-slate-800 overflow-hidden">
+                <div
+                  class="h-full rounded-full bg-indigo-500 transition-all"
+                  :style="{ width: progressWidth(subscriptionUsage.active_products.percentage) }"
+                ></div>
+              </div>
+            </div>
+
+            <div class="rounded-xl bg-slate-950/60 border border-slate-800 p-4">
+              <div class="flex items-center justify-between text-sm font-bold">
+                <span class="text-slate-300">Order Bulan Ini</span>
+                <span class="text-slate-100">{{ formatLimit(subscriptionUsage.monthly_orders.used, subscriptionUsage.monthly_orders.limit) }}</span>
+              </div>
+              <div class="mt-3 h-2 rounded-full bg-slate-800 overflow-hidden">
+                <div
+                  class="h-full rounded-full bg-emerald-500 transition-all"
+                  :style="{ width: progressWidth(subscriptionUsage.monthly_orders.percentage) }"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <router-link
+            v-if="subscriptionUsage.plan === 'free'"
+            to="/dashboard/settings"
+            class="shrink-0 py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition text-center"
+          >
+            Upgrade ke Pro
+          </router-link>
+        </div>
+
+        <div v-if="subscriptionUsage.warning_message" class="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-300">
+          ⚠ {{ subscriptionUsage.warning_message }}
+        </div>
+      </div>
+
       <!-- Metrics Summary Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div v-for="card in cards" :key="card.title"
@@ -195,6 +245,8 @@ const isLoading  = ref(true);
 const error      = ref<string | null>(null);
 const metrics    = ref<any>(null);
 
+const subscriptionUsage = computed(() => metrics.value?.subscription_usage ?? null);
+
 const cards = computed(() => {
   if (!metrics.value) return [];
   const m = metrics.value;
@@ -294,6 +346,14 @@ function formatDate(dateStr: string): string {
 
 function formatShortDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+}
+
+function formatLimit(used: number, limit: number | null): string {
+  return limit === null ? `${used} / Tak Terbatas` : `${used} / ${limit}`;
+}
+
+function progressWidth(percentage: number | null): string {
+  return `${percentage ?? 100}%`;
 }
 
 function getStatusClass(status: string): string {

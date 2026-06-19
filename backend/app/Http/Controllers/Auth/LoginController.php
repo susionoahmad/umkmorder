@@ -55,15 +55,16 @@ class LoginController extends Controller
             'data' => [
                 'token' => $token,
                 'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
+                    'id'    => $user->id,
+                    'name'  => $user->name,
                     'email' => $user->email,
-                    'role' => $user->role,
+                    'role'  => $user->role,
                 ],
                 'tenant' => [
-                    'id' => $user->tenant->id,
-                    'name' => $user->tenant->name,
-                    'slug' => $user->tenant->slug,
+                    'id'                => $user->tenant->id,
+                    'name'              => $user->tenant->name,
+                    'slug'              => $user->tenant->slug,
+                    'subscription_plan' => $user->tenant->subscription_plan ?? 'free',
                 ]
             ]
         ]);
@@ -71,15 +72,18 @@ class LoginController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        // Gracefully handle expired/missing tokens — always return success
         $user = $request->user();
-        
         if ($user) {
-            // Revoke current token
-            $user->currentAccessToken()->delete();
+            try {
+                $user->currentAccessToken()->delete();
+            } catch (\Throwable) {
+                // Token already gone — that's fine
+            }
         }
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Logout berhasil'
         ]);
     }

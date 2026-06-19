@@ -791,6 +791,64 @@ function handleLogout() {
 .dashboard-root .border-t-transparent {
   border-top-color: transparent !important;
 }
+.dashboard-root .focus\:border-indigo-500:focus {
+  border-color: var(--theme-primary) !important;
+}
+.dashboard-root .text-indigo-600 {
+  color: var(--theme-primary) !important;
+}
+.dashboard-root .focus\:ring-indigo-600:focus {
+  --tw-ring-color: var(--theme-primary) !important;
+  border-color: var(--theme-primary) !important;
+}
+.dashboard-root .text-indigo-400 {
+  color: var(--theme-primary) !important;
+}
+.dashboard-root .text-indigo-300 {
+  color: var(--theme-primary) !important;
+}
+.dashboard-root .bg-indigo-500\/10 {
+  background-color: rgba(var(--theme-primary-rgb), 0.1) !important;
+}
+.dashboard-root .bg-indigo-500\/15 {
+  background-color: rgba(var(--theme-primary-rgb), 0.15) !important;
+}
+.dashboard-root .bg-indigo-500\/20 {
+  background-color: rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+.dashboard-root .hover\:bg-indigo-500\/10:hover {
+  background-color: rgba(var(--theme-primary-rgb), 0.1) !important;
+}
+.dashboard-root .hover\:bg-indigo-500\/20:hover {
+  background-color: rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+.dashboard-root .hover\:border-indigo-500:hover {
+  border-color: var(--theme-primary) !important;
+}
+.dashboard-root .hover\:text-indigo-400:hover {
+  color: var(--theme-primary) !important;
+}
+.dashboard-root .shadow-indigo-600\/15 {
+  box-shadow: 0 4px 6px -1px rgba(var(--theme-primary-rgb), 0.15), 0 2px 4px -2px rgba(var(--theme-primary-rgb), 0.15) !important;
+}
+.dashboard-root .border-indigo-500\/20 {
+  border-color: rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+.dashboard-root .border-indigo-500\/25 {
+  border-color: rgba(var(--theme-primary-rgb), 0.25) !important;
+}
+.dashboard-root .border-indigo-500\/30 {
+  border-color: rgba(var(--theme-primary-rgb), 0.3) !important;
+}
+.dashboard-root .bg-indigo-600\/20 {
+  background-color: rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+.dashboard-root .from-indigo-500\/20 {
+  --tw-enter-from: rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+.dashboard-root .to-purple-500\/20 {
+  --tw-enter-to: rgba(var(--theme-secondary-rgb, 139, 92, 246), 0.2) !important;
+}
 
 /* Theme picker card */
 .dashboard-root .theme-card {

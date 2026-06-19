@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductPriceTier;
 use App\Services\LocalUploadService;
 use App\Services\PricingService;
+use App\Services\SubscriptionPlanService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class ProductController extends Controller
     public function __construct(
         private LocalUploadService $uploads,
         private PricingService $pricingService,
+        private SubscriptionPlanService $subscriptionPlans,
     ) {}
 
     public function index(): JsonResponse
@@ -53,6 +55,14 @@ class ProductController extends Controller
 
         $validated = $validator->validated();
         $tiersData = $validated['price_tiers'] ?? [];
+        $willBeActive = $validated['is_active'] ?? true;
+
+        if ($willBeActive && !$this->subscriptionPlans->canActivateProduct($request->user()->tenant)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Batas 20 produk aktif untuk Paket Gratis sudah tercapai. Arsipkan produk lain atau upgrade ke Paket Pro untuk produk aktif tak terbatas.',
+            ], 422);
+        }
 
         // Validate tier overlaps
         if (!empty($tiersData)) {
@@ -112,6 +122,14 @@ class ProductController extends Controller
 
         $validated  = $validator->validated();
         $tiersData  = $validated['price_tiers'] ?? [];
+        $willBeActive = $validated['is_active'] ?? $product->is_active;
+
+        if ($willBeActive && !$this->subscriptionPlans->canActivateProduct($request->user()->tenant, $product->id)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Batas 20 produk aktif untuk Paket Gratis sudah tercapai. Arsipkan produk lain atau upgrade ke Paket Pro untuk produk aktif tak terbatas.',
+            ], 422);
+        }
 
         // Validate tier overlaps
         if (!empty($tiersData)) {

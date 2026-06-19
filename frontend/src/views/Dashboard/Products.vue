@@ -4,7 +4,7 @@
       <h3 class="text-xl font-bold text-slate-200">Daftar Produk</h3>
       <button 
         @click="openAddModal" 
-        class="py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold text-sm transition shadow-md shadow-indigo-600/15"
+        class="theme-btn py-2.5 px-4 rounded-xl font-bold text-sm transition duration-200 shadow-md"
       >
         + Tambah Produk
       </button>
@@ -12,7 +12,7 @@
 
     <!-- Loading State -->
     <div v-if="isLoading" class="flex flex-col items-center justify-center py-24 space-y-4">
-      <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      <div class="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin theme-spinner"></div>
       <p class="text-slate-400">Memuat produk...</p>
     </div>
 
@@ -62,7 +62,7 @@
           <div class="flex flex-col flex-1 p-3 gap-1.5">
             <h4 class="font-bold text-slate-100 text-sm leading-snug line-clamp-2">{{ product.name }}</h4>
             <p class="text-[10px] text-slate-600 font-mono">{{ product.sku || '—' }}</p>
-            <p class="text-indigo-400 font-extrabold text-sm mt-auto pt-1">
+            <p class="theme-accent-text font-extrabold text-sm mt-auto pt-1">
               Rp {{ formatRupiah(product.price) }}
             </p>
           </div>
@@ -71,7 +71,7 @@
           <div class="flex border-t border-slate-800">
             <button 
               @click="openEditModal(product)"
-              class="flex-1 py-2 text-xs font-semibold text-indigo-400 hover:bg-indigo-500/10 transition flex items-center justify-center gap-1"
+              class="flex-1 py-2 text-xs font-semibold theme-accent-text hover:bg-[rgba(var(--theme-primary-rgb),0.1)] transition flex items-center justify-center gap-1"
             >
               ✏️ Edit
             </button>
@@ -286,7 +286,7 @@
             <button 
               type="submit"
               :disabled="isSaving"
-              class="flex-1 py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold text-sm transition disabled:opacity-50"
+              class="theme-btn flex-1 py-3.5 px-4 rounded-xl font-bold text-sm transition duration-200 disabled:opacity-50"
             >
               {{ isSaving ? 'Menyimpan...' : 'Simpan' }}
             </button>

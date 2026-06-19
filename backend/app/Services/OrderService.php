@@ -10,11 +10,21 @@ use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
+    public function __construct(
+        private SubscriptionPlanService $subscriptionPlans,
+    ) {}
+
     public function updateStatus($orderId, $newStatus, $userId, $paymentStatus = null, $paymentMethod = null, $paymentDueDate = null)
     {
         // Gunakan DB Transaction agar jika gagal, data tidak setengah-setengah tersimpan
         return DB::transaction(function () use ($orderId, $newStatus, $userId, $paymentStatus, $paymentMethod, $paymentDueDate) {
             $order = Order::findOrFail($orderId);
+            $willConsumeOrderSlot = !$this->subscriptionPlans->isConfirmedOrderStatus($order->status)
+                && $this->subscriptionPlans->isConfirmedOrderStatus($newStatus);
+
+            if ($willConsumeOrderSlot && !$this->subscriptionPlans->canAddConfirmedOrder($order->tenant)) {
+                throw new \Exception('Batas 100 order per bulan untuk Paket Gratis sudah tercapai. Upgrade ke Paket Pro untuk order tanpa batas.');
+            }
 
             // Catat log perubahan status jika statusnya berubah
             if ($order->status !== $newStatus) {

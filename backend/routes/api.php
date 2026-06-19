@@ -61,8 +61,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifyActiveTenant::clas
 
     // Manajemen Piutang (Receivables)
     Route::get('/receivables', [\App\Http\Controllers\ReceivableController::class, 'index']);
+    // Laporan & Ekspor Data
     Route::get('/reports/sales', [ReportController::class, 'sales']);
     Route::get('/reports/daily-turnover', [ReportController::class, 'dailyTurnover']);
+    Route::get('/reports/export', [ReportController::class, 'export']);
 
     // Pengaturan Toko (Tenant Settings)
     Route::get('/tenant/settings', [TenantSettingsController::class, 'show']);

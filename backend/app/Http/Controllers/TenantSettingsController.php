@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TenantCatalogSetting;
 use App\Services\LocalUploadService;
+use App\Services\SubscriptionPlanService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
@@ -13,7 +14,11 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class TenantSettingsController extends Controller
 {
-    public function __construct(private LocalUploadService $uploads) {}
+    public function __construct(
+        private LocalUploadService $uploads,
+        private SubscriptionPlanService $subscriptionPlans,
+    ) {}
+
     public function show(): JsonResponse
     {
         $tenant = request()->user()->tenant()->with('catalogSetting')->first();
@@ -155,6 +160,14 @@ class TenantSettingsController extends Controller
      */
     public function getQrCode(Request $request): JsonResponse
     {
+        if (!$this->subscriptionPlans->canAccessQrCode($request->user()->tenant)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'QR Code Katalog hanya tersedia untuk Paket Pro. Upgrade sekarang untuk mengakses fitur ini.',
+                'upgrade_required' => true,
+            ], 403);
+        }
+
         $tenant = $request->user()->tenant;
         $catalogUrl = "https://umkmorder.id/{$tenant->slug}";
 

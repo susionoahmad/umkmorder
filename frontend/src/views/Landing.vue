@@ -44,14 +44,14 @@
       <div class="hero-inner">
         <div class="hero-badge">
           <span class="badge-dot"></span>
-          Platform Katalog & Order untuk UMKM Indonesia
+          Platform Pesanan, Pelanggan, Pembayaran & Piutang
         </div>
         <h1 class="hero-title">
-          Buka Toko Online,<br>
-          <span class="gradient-text">Terima Order Lewat WhatsApp</span>
+          Kelola Order UMKM,<br>
+          <span class="gradient-text">bukan sekadar katalog online</span>
         </h1>
         <p class="hero-desc">
-          UMKMOrder memberikan toko online profesional dengan link sendiri, manajemen produk mudah, dan notifikasi order langsung ke WhatsApp Anda — tanpa biaya IT, tanpa ribet.
+          UMKMOrder membantu Anda menerima pesanan dari katalog online, menyimpan data pelanggan, mencatat pembayaran, dan memantau piutang dalam satu aplikasi sederhana.
         </p>
         <div class="hero-cta">
           <router-link :to="authStore.isAuthenticated ? '/dashboard' : '/register'" class="btn-hero-primary">
@@ -199,6 +199,11 @@
                 <span class="check">✓</span> {{ f }}
               </li>
             </ul>
+            <ul v-if="plan.restrictions?.length" class="price-features price-restrictions">
+              <li v-for="f in plan.restrictions" :key="f">
+                <span class="cross">x</span> {{ f }}
+              </li>
+            </ul>
             <router-link :to="authStore.isAuthenticated ? '/dashboard' : '/register'" :class="plan.popular ? 'btn-hero-primary' : 'btn-outline price-btn'">
               {{ authStore.isAuthenticated ? 'Ke Dashboard' : plan.cta }}
             </router-link>
@@ -264,45 +269,70 @@ const plans = [
     name: 'Gratis',
     price: 'Rp 0',
     period: '/bulan',
-    desc: 'Untuk UMKM yang baru mulai go online.',
+    desc: 'UMKM yang baru mulai go online.',
     popular: false,
     cta: 'Mulai Gratis',
     features: [
       '1 Katalog Online',
-      'Hingga 20 Produk',
+      'Maksimal 20 Produk Aktif',
+      'Hingga 100 Order per Bulan',
       'WhatsApp Order',
+      'Data Pelanggan Otomatis',
       'Dashboard Dasar',
+      'Lokasi Pengiriman (Google Maps)',
+      'Ongkir Manual & Jarak',
+    ],
+    restrictions: [
+      'Manajemen Piutang',
+      'Reminder WhatsApp',
+      'Laporan Lengkap',
+      'Multi User',
     ],
   },
   {
     name: 'Pro',
-    price: 'Rp 49rb',
+    price: 'Rp 49.000',
     period: '/bulan',
-    desc: 'Untuk UMKM aktif yang ingin tumbuh lebih cepat.',
+    desc: 'UMKM aktif yang ingin tumbuh lebih cepat.',
     popular: true,
-    cta: 'Coba Pro Gratis 14 Hari',
+    cta: 'Upgrade Sekarang',
     features: [
-      'Produk Tak Terbatas',
+      'Produk Aktif Tak Terbatas',
+      'Order Tak Terbatas',
+      'Terima Pesanan dari Katalog Online',
       'Manajemen Piutang',
-      'Laporan & Analitik',
-      'Notifikasi WA Otomatis',
-      'Foto Produk HD',
+      'Catat Pembayaran Sebagian',
+      'Tempo & Jatuh Tempo',
+      '1 Klik Reminder WhatsApp',
+      'Ongkir Berdasarkan Jarak',
+      'Laporan Penjualan',
+      'Laporan Piutang',
+      'QR Code Katalog',
+      'Statistik Pengunjung Katalog',
+      'Export Data',
     ],
+    restrictions: [],
   },
   {
     name: 'Bisnis',
     price: 'Custom',
     period: '',
-    desc: 'Untuk tim, multi-cabang, dan kebutuhan khusus.',
+    desc: 'Distributor, multi cabang, dan tim penjualan.',
     popular: false,
     cta: 'Hubungi Kami',
     features: [
-      'Semua fitur Pro',
-      'Multi-user / Tim',
-      'Integrasi API WA',
+      'Semua Fitur Pro',
+      'Multi User / Tim',
+      'Role & Permission',
+      'Reminder WhatsApp Otomatis',
+      'Integrasi WA Gateway',
+      'API Access',
+      'Multi Cabang',
+      'Custom Branding',
       'Onboarding Pribadi',
-      'SLA Priority Support',
+      'Priority Support',
     ],
+    restrictions: [],
   },
 ];
 </script>
@@ -636,7 +666,10 @@ const plans = [
 .price-desc { font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.5; }
 .price-features { list-style: none; padding: 0; margin-bottom: 28px; display: flex; flex-direction: column; gap: 10px; }
 .price-features li { font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 8px; }
+.price-restrictions { margin-top: -12px; }
+.price-restrictions li { color: #64748b; }
 .check { color: #6366f1; font-weight: 700; }
+.cross { color: #ef4444; font-weight: 800; }
 .price-btn { display: block; text-align: center; }
 
 /* ===== FINAL CTA ===== */

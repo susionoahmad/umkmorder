@@ -10,6 +10,9 @@
         <a @click="navigate('#fitur')" :class="{ active: activeSection === 'fitur' }" class="cursor-pointer">Fitur</a>
         <a @click="navigate('#cara-kerja')" :class="{ active: activeSection === 'cara-kerja' }" class="cursor-pointer">Cara Kerja</a>
         <a @click="navigate('#harga')" :class="{ active: activeSection === 'harga' }" class="cursor-pointer">Harga</a>
+        <router-link v-if="lastVisitedSlug" :to="`/${lastVisitedSlug}`" class="active-store-link">
+          🛍️ Toko: {{ lastVisitedName || lastVisitedSlug }}
+        </router-link>
       </nav>
       <div class="nav-actions">
         <router-link v-if="authStore.isAuthenticated" to="/dashboard" class="btn-outline">Dashboard</router-link>
@@ -29,6 +32,9 @@
       <a @click="navigate('#fitur'); mobileOpen = false" :class="{ active: activeSection === 'fitur' }" class="cursor-pointer">Fitur</a>
       <a @click="navigate('#cara-kerja'); mobileOpen = false" :class="{ active: activeSection === 'cara-kerja' }" class="cursor-pointer">Cara Kerja</a>
       <a @click="navigate('#harga'); mobileOpen = false" :class="{ active: activeSection === 'harga' }" class="cursor-pointer">Harga</a>
+      <router-link v-if="lastVisitedSlug" :to="`/${lastVisitedSlug}`" class="mobile-store-link" @click="mobileOpen = false">
+        🛍️ Toko Aktif: {{ lastVisitedName || lastVisitedSlug }}
+      </router-link>
       <div class="mobile-menu-divider"></div>
       <router-link v-if="authStore.isAuthenticated" to="/dashboard" @click="mobileOpen=false">Dashboard</router-link>
       <template v-else>
@@ -52,6 +58,9 @@ const authStore = useAuthStore();
 const mobileOpen = ref(false);
 const isScrolled = ref(false);
 
+const lastVisitedSlug = ref<string | null>(null);
+const lastVisitedName = ref<string | null>(null);
+
 const router = useRouter();
 const route = useRoute();
 
@@ -71,6 +80,8 @@ const navigate = (hash: string) => {
 };
 
 onMounted(() => {
+  lastVisitedSlug.value = localStorage.getItem('last_visited_slug');
+  lastVisitedName.value = localStorage.getItem('last_visited_name');
   window.addEventListener('scroll', handleScroll);
   handleScroll();
 });
@@ -233,6 +244,43 @@ onUnmounted(() => {
 }
 .cursor-pointer {
   cursor: pointer;
+}
+.nav-links a.active-store-link {
+  height: auto;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  transition: all 0.2s ease;
+  line-height: 1.2;
+  font-size: 13px;
+  margin-left: 8px;
+}
+.nav-links a.active-store-link:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #a5b4fc;
+  transform: translateY(-1px);
+}
+.mobile-store-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin: 4px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #818cf8 !important;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.mobile-store-link:hover {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.4);
 }
 @media (max-width: 768px) {
   .nav-links, .nav-actions { display: none; }

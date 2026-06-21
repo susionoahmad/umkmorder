@@ -68,6 +68,10 @@ export const useCatalogStore = defineStore('catalog', {
         if (response.data.status === 'success') {
           this.tenant = response.data.data.tenant;
           this.products = response.data.data.products;
+          if (this.tenant) {
+            localStorage.setItem('last_visited_slug', this.tenant.slug);
+            localStorage.setItem('last_visited_name', this.tenant.name);
+          }
         } else {
           this.error = response.data.message || 'Gagal memuat katalog';
         }

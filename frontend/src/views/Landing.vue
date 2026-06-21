@@ -19,6 +19,14 @@
         <p class="hero-desc">
           UMKMOrder membantu Anda menerima pesanan dari katalog online, menyimpan data pelanggan, mencatat pembayaran, dan memantau piutang dalam satu aplikasi sederhana.
         </p>
+        <!-- Active Shop Pill Link -->
+        <div v-if="lastVisitedSlug" class="hero-active-shop-pill">
+          <router-link :to="`/${lastVisitedSlug}`" class="active-shop-pill-inner">
+            <span class="pulse-dot"></span>
+            Kunjungi Toko Terakhir: <strong>{{ lastVisitedName }}</strong>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:4px; display:inline-block; vertical-align:middle;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </router-link>
+        </div>
         <div class="hero-cta">
           <router-link :to="authStore.isAuthenticated ? '/dashboard' : '/register'" class="btn-hero-primary">
             {{ authStore.isAuthenticated ? 'Ke Dashboard' : 'Mulai Gratis Sekarang' }}
@@ -234,6 +242,9 @@ const currentHost = computed(() => typeof window !== 'undefined' ? window.locati
 const isScrolled = ref(false);
 const activeSection = ref('hero');
 
+const lastVisitedSlug = ref<string | null>(null);
+const lastVisitedName = ref<string | null>(null);
+
 const sectionLabels = {
   hero: 'Beranda',
   fitur: 'Fitur',
@@ -248,6 +259,8 @@ const handleScroll = () => {
 };
 
 onMounted(() => {
+  lastVisitedSlug.value = localStorage.getItem('last_visited_slug');
+  lastVisitedName.value = localStorage.getItem('last_visited_name');
   window.addEventListener('scroll', handleScroll);
   handleScroll();
 
@@ -571,6 +584,54 @@ const plans = [
 .hero-desc {
   font-size: 18px; color: #94a3b8; max-width: 620px; margin: 0 auto 36px;
   line-height: 1.7; animation: fadeSlideDown 0.6s ease 0.2s both;
+}
+.hero-active-shop-pill {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+  animation: fadeSlideDown 0.6s ease 0.25s both;
+}
+.active-shop-pill-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 100px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  font-size: 14px;
+  font-weight: 500;
+  color: #a5b4fc;
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.active-shop-pill-inner:hover {
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.55);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
+}
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6366f1;
+  box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  animation: pulse-ring 2s infinite;
+}
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
 }
 .hero-cta {
   display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;

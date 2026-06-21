@@ -123,4 +123,5 @@ Route::middleware(['auth:sanctum', 'super_admin'])->prefix('admin')->group(funct
     // Settings
     Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'show']);
     Route::put('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update']);
+    Route::post('/settings/upload-qris', [\App\Http\Controllers\Admin\SettingsController::class, 'uploadQris']);
 });

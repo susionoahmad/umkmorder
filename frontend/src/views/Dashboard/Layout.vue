@@ -371,8 +371,9 @@
               
               <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-4">
                 <div class="w-full flex flex-col sm:flex-row items-center gap-4 justify-center bg-slate-900/60 p-3 rounded-xl border border-slate-850">
-                  <div class="w-24 h-24 bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-center shrink-0">
-                    <div class="grid grid-cols-4 gap-1 w-full h-full opacity-90 p-1 bg-slate-950 rounded">
+                  <div class="w-24 h-24 bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-center shrink-0 shadow-md">
+                    <img v-if="platformSettings?.admin_qris_image_url" :src="platformSettings.admin_qris_image_url" alt="QRIS" class="w-full h-full object-contain" />
+                    <div v-else class="grid grid-cols-4 gap-1 w-full h-full opacity-90 p-1 bg-slate-950 rounded">
                       <div class="bg-white rounded-sm"></div>
                       <div class="bg-slate-950 rounded-sm"></div>
                       <div class="bg-white rounded-sm"></div>
@@ -395,9 +396,10 @@
                     <p class="text-xs font-bold text-slate-300">📱 Scan QRIS E-Wallet</p>
                     <p class="text-[10px] text-slate-400">Scan QR di atas dengan GoPay, OVO, Dana, atau m-Banking.</p>
                     <div class="border-t border-slate-800 pt-1 mt-1">
-                      <p class="text-xs font-bold text-slate-300">🏦 Transfer Bank BCA</p>
-                      <p class="text-xs font-black text-indigo-400">772-0988-123</p>
-                      <p class="text-[9px] text-slate-500">a/n PT UMKM Order Indonesia</p>
+                      <p class="text-xs font-bold text-slate-300">🏦 Informasi Transfer Bank</p>
+                      <div class="whitespace-pre-line text-xs font-black text-indigo-400 leading-normal">
+                        {{ platformSettings?.admin_bank_transfer_info || "772-0988-123\nBank BCA — PT UMKM Order Indonesia" }}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -422,7 +424,7 @@
               </button>
               
               <a 
-                :href="'https://wa.me/6281234567890?text=' + encodeURIComponent('Halo Admin, saya ingin konfirmasi pembayaran untuk upgrade Pro:\n\n• Toko: ' + (authStore.tenant?.name || '') + '\n• Invoice: #' + pendingInvoice.invoice_number + '\n• Nominal: Rp ' + Number(pendingInvoice.amount).toLocaleString('id-ID') + '\n\nMohon segera diaktifkan. Terima kasih!')"
+                :href="'https://wa.me/' + (platformSettings?.support_whatsapp || '6281234567890') + '?text=' + encodeURIComponent('Halo Admin, saya ingin konfirmasi pembayaran untuk upgrade Pro:\n\n• Toko: ' + (authStore.tenant?.name || '') + '\n• Invoice: #' + pendingInvoice.invoice_number + '\n• Nominal: Rp ' + Number(pendingInvoice.amount).toLocaleString('id-ID') + '\n\nMohon segera diaktifkan. Terima kasih!')"
                 target="_blank"
                 class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs sm:text-sm transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 text-center"
               >
@@ -507,8 +509,9 @@
               <!-- Payment Details Display -->
               <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex flex-col items-center justify-center text-center">
                 <div v-if="selectedPaymentMethod === 'qris'" class="space-y-1.5 flex flex-col items-center">
-                  <div class="w-24 h-24 bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-center shadow-md">
-                    <div class="grid grid-cols-4 gap-1 w-full h-full opacity-90 p-1 bg-slate-950 rounded">
+                  <div class="w-24 h-24 bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-center shadow-md animate-fadeIn">
+                    <img v-if="platformSettings?.admin_qris_image_url" :src="platformSettings.admin_qris_image_url" alt="QRIS" class="w-full h-full object-contain" />
+                    <div v-else class="grid grid-cols-4 gap-1 w-full h-full opacity-90 p-1 bg-slate-950 rounded">
                       <div class="bg-white rounded-sm"></div>
                       <div class="bg-slate-950 rounded-sm"></div>
                       <div class="bg-white rounded-sm"></div>
@@ -528,15 +531,16 @@
                     </div>
                   </div>
                   <div class="space-y-0.5">
-                    <p class="text-[10px] font-black text-slate-200">QRIS GPN UMKM-ORDER</p>
+                    <p class="text-[10px] font-black text-slate-200">{{ platformSettings?.admin_qris_info || "QRIS GPN UMKM-ORDER" }}</p>
                     <p class="text-[9px] text-slate-500">Scan QR Code ini menggunakan aplikasi e-wallet Anda</p>
                   </div>
                 </div>
-                <div v-else class="space-y-1 py-1.5">
+                <div v-else class="space-y-1 py-1.5 animate-fadeIn">
                   <p class="text-[10px] text-slate-400">Silakan transfer pembayaran ke rekening berikut:</p>
-                  <div class="bg-slate-900 border border-slate-800 px-4 py-1.5 rounded-lg inline-block">
-                    <p class="text-sm font-black text-indigo-400 tracking-wider">772-0988-123</p>
-                    <p class="text-[10px] font-bold text-slate-400">Bank BCA — PT UMKM Order Indonesia</p>
+                  <div class="bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl inline-block text-left">
+                    <div class="whitespace-pre-line text-xs font-black text-indigo-400 leading-normal">
+                      {{ platformSettings?.admin_bank_transfer_info || "772-0988-123\nBank BCA — PT UMKM Order Indonesia" }}
+                    </div>
                   </div>
                   <p class="text-[9px] text-slate-500 font-medium">Pembayaran akan dikonfirmasi manual oleh Super Admin.</p>
                 </div>
@@ -548,7 +552,10 @@
           <div class="border-t border-slate-800 pt-3 space-y-3 shrink-0">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400">Total Pembayaran:</span>
-              <span class="text-base font-black text-emerald-450">Rp 49.000 <span class="text-[10px] font-medium text-slate-500">/ bulan</span></span>
+              <span class="text-base font-black text-emerald-450">
+                Rp {{ proPlan ? formatRupiah(proPlan.monthly_price) : '49.000' }} 
+                <span class="text-[10px] font-medium text-slate-500">/ bulan</span>
+              </span>
             </div>
 
             <div v-if="upgradeError" class="bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold p-2.5 rounded-lg text-center">
@@ -591,6 +598,8 @@ const upgradeError = ref<string | null>(null);
 
 const isCheckingPending = ref(false);
 const pendingInvoice = ref<any>(null);
+const platformSettings = ref<any>(null);
+const proPlan = ref<any>(null);
 
 async function checkPendingUpgrade() {
   if (!authStore.token) return;
@@ -600,6 +609,8 @@ async function checkPendingUpgrade() {
     const res = await api.get('/tenant/settings');
     if (res.data.status === 'success') {
       pendingInvoice.value = res.data.data.pending_invoice;
+      platformSettings.value = res.data.data.platform_settings;
+      proPlan.value = res.data.data.pro_plan;
     }
   } catch (err) {
     console.error('Failed to check pending upgrade status:', err);

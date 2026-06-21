@@ -93,7 +93,7 @@ class SuperAdminSeeder extends Seeder
             'tenant_id' => null,
             'name' => 'Super Admin',
             'email' => 'admin@umkmorder.id',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('T@urus212'),
             'role' => 'super_admin',
         ]);
 
@@ -102,11 +102,14 @@ class SuperAdminSeeder extends Seeder
             'app_name' => 'UMKMOrder',
             'company_name' => 'UMKMOrder Corp',
             'support_email' => 'support@umkmorder.id',
-            'support_whatsapp' => '6281234567890',
+            'support_whatsapp' => '6281392156513',
             'logo_url' => null,
             'favicon_url' => null,
             'default_trial_duration' => 30,
             'maintenance_mode' => false,
+            'admin_bank_transfer_info' => "90010041894\nBank Jenius — Ahmad Susiono",
+            'admin_qris_image_url' => null,
+            'admin_qris_info' => "QRIS GPN UMKM-ORDER",
         ]);
     }
 }

@@ -18,6 +18,9 @@ class PlatformSetting extends Model
         'favicon_url',
         'default_trial_duration',
         'maintenance_mode',
+        'admin_bank_transfer_info',
+        'admin_qris_image_url',
+        'admin_qris_info',
     ];
 
     protected $casts = [

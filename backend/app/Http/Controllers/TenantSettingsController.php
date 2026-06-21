@@ -26,12 +26,17 @@ class TenantSettingsController extends Controller
             ->where('status', 'pending')
             ->first();
 
+        $platformSettings = \App\Models\PlatformSetting::first();
+        $proPlan = \App\Models\Plan::where('slug', 'pro')->first();
+
         return response()->json([
             'status' => 'success',
             'data' => [
                 'tenant' => $tenant,
                 'catalog_setting' => $tenant->catalogSetting,
                 'pending_invoice' => $pendingInvoice,
+                'platform_settings' => $platformSettings,
+                'pro_plan' => $proPlan,
             ],
         ]);
     }

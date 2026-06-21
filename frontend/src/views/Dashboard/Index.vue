@@ -63,13 +63,14 @@
             </div>
           </div>
 
-          <router-link
+          <button
             v-if="subscriptionUsage.plan === 'free'"
-            to="/dashboard/settings"
+            type="button"
+            @click="authStore.showUpgradeModal = true"
             class="shrink-0 py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition text-center"
           >
             Upgrade ke Pro
-          </router-link>
+          </button>
         </div>
 
         <div v-if="subscriptionUsage.warning_message" class="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-300">
@@ -236,7 +237,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import api from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
@@ -300,6 +301,10 @@ async function fetchMetrics() {
 }
 
 onMounted(fetchMetrics);
+
+watch(() => authStore.isPro, () => {
+  fetchMetrics();
+});
 
 // ---- Chart helpers ----
 function chartMax(data: any[], keys: string[]): number {

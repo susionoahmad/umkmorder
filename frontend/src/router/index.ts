@@ -21,6 +21,21 @@ const routes = [
     component: Landing,
   },
   {
+    path: '/privacy',
+    name: 'privacy',
+    component: () => import('@/views/Legal/Privacy.vue'),
+  },
+  {
+    path: '/terms',
+    name: 'terms',
+    component: () => import('@/views/Legal/Terms.vue'),
+  },
+  {
+    path: '/contact',
+    name: 'contact',
+    component: () => import('@/views/Legal/Contact.vue'),
+  },
+  {
     path: '/login',
     name: 'login',
     component: Login,
@@ -135,6 +150,18 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to, _from, savedPosition) {
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth',
+      };
+    }
+    if (savedPosition) {
+      return savedPosition;
+    }
+    return { top: 0 };
+  },
 });
 
 router.beforeEach((to, _, next) => {

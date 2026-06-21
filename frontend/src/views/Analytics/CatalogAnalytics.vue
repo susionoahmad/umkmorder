@@ -68,14 +68,14 @@
         </div>
 
         <!-- CTA -->
-        <router-link to="/dashboard/settings"
+        <button type="button" @click="authStore.showUpgradeModal = true"
           class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-extrabold text-white text-base transition-all duration-200 shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5"
           style="background: linear-gradient(135deg, #6366f1, #8b5cf6)"
         >
           <span>⚡</span>
           Upgrade ke Paket Pro — Rp 49.000/bulan
           <span>→</span>
-        </router-link>
+        </button>
         <p class="mt-3 text-xs text-slate-600">Langsung aktif setelah upgrade · Tanpa kontrak panjang</p>
       </div>
     </div>
@@ -203,7 +203,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import api from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
@@ -275,6 +275,10 @@ function setRange(range: string) {
 
 onMounted(() => {
   if (authStore.isPro) fetchAnalytics();
+});
+
+watch(() => authStore.isPro, (isPro) => {
+  if (isPro) fetchAnalytics();
 });
 
 // --- Chart helpers ---

@@ -28,7 +28,7 @@ class SubscriptionController extends Controller
             'plan_id' => 'required|exists:plans,id',
             'started_at' => 'required|date',
             'expired_at' => 'nullable|date',
-            'status' => 'required|string|in:trial,active,expired,suspended',
+            'status' => 'required|string|in:trial,active,expired,suspended,pending',
         ]);
 
         $tenant = Tenant::findOrFail($request->tenant_id);
@@ -62,7 +62,7 @@ class SubscriptionController extends Controller
             'plan_id' => 'required|exists:plans,id',
             'started_at' => 'required|date',
             'expired_at' => 'nullable|date',
-            'status' => 'required|string|in:trial,active,expired,suspended',
+            'status' => 'required|string|in:trial,active,expired,suspended,pending',
         ]);
 
         $plan = Plan::findOrFail($request->plan_id);

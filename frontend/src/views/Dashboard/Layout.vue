@@ -315,7 +315,257 @@
               </button>
             </div>
           </template>
+        </div>
+      </div>
+    </div>
 
+    <!-- Modal Upgrade ke Pro -->
+    <div 
+      v-if="authStore.showUpgradeModal" 
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md transition-all duration-300"
+    >
+      <div class="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col max-h-[90vh] text-slate-200 overflow-hidden">
+        <!-- Background glowing orbs -->
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- 1. Checking Pending State Loading -->
+        <div v-if="isCheckingPending" class="flex flex-col items-center justify-center py-16 text-center space-y-4 my-auto">
+          <div class="w-10 h-10 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-xs text-slate-400">Memeriksa status langganan...</p>
+        </div>
+
+        <!-- 2. Pending Payment View -->
+        <div v-else-if="pendingInvoice" class="flex flex-col h-full overflow-hidden space-y-4">
+          <!-- Header -->
+          <div class="flex items-start justify-between pb-2 shrink-0">
+            <div class="space-y-1">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                <span>⏳</span> Menunggu Verifikasi
+              </div>
+              <h3 class="text-xl sm:text-2xl font-black text-slate-100">Konfirmasi Pembayaran</h3>
+            </div>
+            <button 
+              @click="authStore.showUpgradeModal = false" 
+              class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-750 flex items-center justify-center text-slate-400 hover:text-slate-200 transition"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Body (Scrollable) -->
+          <div class="flex-1 overflow-y-auto pr-1 space-y-4 min-h-0">
+            <div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-xs sm:text-sm space-y-3">
+              <p class="text-slate-350 leading-relaxed">
+                Permintaan upgrade Anda telah terdaftar dengan invoice <strong class="text-slate-200">#{{ pendingInvoice.invoice_number }}</strong>. Fitur Pro akan aktif otomatis setelah pembayaran Anda diverifikasi oleh Super Admin.
+              </p>
+              <div class="flex items-center justify-between border-t border-slate-850 pt-3">
+                <span class="text-xs text-slate-455">Status Tagihan:</span>
+                <span class="px-2 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase">Belum Lunas</span>
+              </div>
+            </div>
+
+            <!-- Payment Instructions -->
+            <div class="space-y-3">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Metode Pembayaran</label>
+              
+              <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-4">
+                <div class="w-full flex flex-col sm:flex-row items-center gap-4 justify-center bg-slate-900/60 p-3 rounded-xl border border-slate-850">
+                  <div class="w-24 h-24 bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-center shrink-0">
+                    <div class="grid grid-cols-4 gap-1 w-full h-full opacity-90 p-1 bg-slate-950 rounded">
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-slate-950 rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-slate-950 rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-slate-950 rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-slate-950 rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-slate-950 rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                    </div>
+                  </div>
+                  <div class="text-left space-y-1">
+                    <p class="text-xs font-bold text-slate-300">📱 Scan QRIS E-Wallet</p>
+                    <p class="text-[10px] text-slate-400">Scan QR di atas dengan GoPay, OVO, Dana, atau m-Banking.</p>
+                    <div class="border-t border-slate-800 pt-1 mt-1">
+                      <p class="text-xs font-bold text-slate-300">🏦 Transfer Bank BCA</p>
+                      <p class="text-xs font-black text-indigo-400">772-0988-123</p>
+                      <p class="text-[9px] text-slate-500">a/n PT UMKM Order Indonesia</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer (Fixed) -->
+          <div class="border-t border-slate-800 pt-4 space-y-3 shrink-0">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-400">Nominal Transfer:</span>
+              <span class="text-base font-black text-emerald-450">Rp {{ Number(pendingInvoice.amount).toLocaleString('id-ID') }}</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button 
+                type="button" 
+                @click="authStore.showUpgradeModal = false" 
+                class="flex-1 py-2.5 px-4 rounded-xl border border-slate-800 hover:bg-slate-850 font-bold text-xs sm:text-sm transition text-center"
+              >
+                Tutup & Kembali
+              </button>
+              
+              <a 
+                :href="'https://wa.me/6281234567890?text=' + encodeURIComponent('Halo Admin, saya ingin konfirmasi pembayaran untuk upgrade Pro:\n\n• Toko: ' + (authStore.tenant?.name || '') + '\n• Invoice: #' + pendingInvoice.invoice_number + '\n• Nominal: Rp ' + Number(pendingInvoice.amount).toLocaleString('id-ID') + '\n\nMohon segera diaktifkan. Terima kasih!')"
+                target="_blank"
+                class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs sm:text-sm transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 text-center"
+              >
+                <span>📲</span> Konfirmasi via WA
+              </a>
+            </div>
+            <p class="text-[9px] text-center text-slate-500">Klik "Konfirmasi via WA" untuk mempercepat proses persetujuan oleh Super Admin.</p>
+          </div>
+        </div>
+
+        <!-- 3. Main Form View -->
+        <div v-else class="flex flex-col h-full overflow-hidden space-y-4">
+          <!-- Header -->
+          <div class="flex items-start justify-between pb-2 shrink-0">
+            <div class="space-y-0.5">
+              <div class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-bold uppercase tracking-wider">
+                <span>⚡</span> Pro Upgrade
+              </div>
+              <h3 class="text-lg sm:text-xl font-black text-slate-100">Upgrade ke Paket Pro</h3>
+            </div>
+            <button 
+              @click="authStore.showUpgradeModal = false" 
+              :disabled="isUpgrading"
+              class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-750 flex items-center justify-center text-slate-400 hover:text-slate-200 transition disabled:opacity-40"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Body (Scrollable) -->
+          <div class="flex-1 overflow-y-auto pr-1 space-y-4 min-h-0">
+            <!-- Benefits -->
+            <div class="space-y-2 bg-slate-950/40 border border-slate-800/80 rounded-xl p-3 text-xs">
+              <div class="flex items-start gap-2">
+                <span class="text-indigo-400 font-bold shrink-0">✓</span>
+                <p><strong class="text-slate-200">QR Code Katalog Kustom</strong> — Buat dan unduh QR code katalog toko Anda.</p>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-indigo-400 font-bold shrink-0">✓</span>
+                <p><strong class="text-slate-200">Laporan &amp; Piutang Lengkap</strong> — Pantau penjualan, omzet harian, dan piutang.</p>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-indigo-400 font-bold shrink-0">✓</span>
+                <p><strong class="text-slate-200">Tagihan WhatsApp 1-Klik</strong> — Kirim pengingat tagihan instan ke pelanggan.</p>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-indigo-400 font-bold shrink-0">✓</span>
+                <p><strong class="text-slate-200">Analisis Performa Toko</strong> — Grafik pengunjung harian dan rasio konversi.</p>
+              </div>
+            </div>
+
+            <!-- Payment Options -->
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Metode Pembayaran</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button 
+                  type="button" 
+                  @click="selectedPaymentMethod = 'qris'"
+                  :class="[
+                    'py-2 px-3 rounded-xl border font-bold text-xs transition-all flex items-center justify-center gap-1.5',
+                    selectedPaymentMethod === 'qris' 
+                      ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400 shadow-md shadow-indigo-500/5' 
+                      : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:bg-slate-800/50 hover:text-slate-300'
+                  ]"
+                >
+                  <span>📱</span> QRIS (E-Wallet)
+                </button>
+                <button 
+                  type="button" 
+                  @click="selectedPaymentMethod = 'bank'"
+                  :class="[
+                    'py-2 px-3 rounded-xl border font-bold text-xs transition-all flex items-center justify-center gap-1.5',
+                    selectedPaymentMethod === 'bank' 
+                      ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400 shadow-md shadow-indigo-500/5' 
+                      : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:bg-slate-800/50 hover:text-slate-300'
+                  ]"
+                >
+                  <span>🏦</span> Transfer Bank
+                </button>
+              </div>
+
+              <!-- Payment Details Display -->
+              <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                <div v-if="selectedPaymentMethod === 'qris'" class="space-y-1.5 flex flex-col items-center">
+                  <div class="w-24 h-24 bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-center shadow-md">
+                    <div class="grid grid-cols-4 gap-1 w-full h-full opacity-90 p-1 bg-slate-950 rounded">
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-slate-950 rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-slate-950 rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-slate-950 rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-slate-950 rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                      <div class="bg-slate-950 rounded-sm"></div>
+                      <div class="bg-white rounded-sm"></div>
+                    </div>
+                  </div>
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] font-black text-slate-200">QRIS GPN UMKM-ORDER</p>
+                    <p class="text-[9px] text-slate-500">Scan QR Code ini menggunakan aplikasi e-wallet Anda</p>
+                  </div>
+                </div>
+                <div v-else class="space-y-1 py-1.5">
+                  <p class="text-[10px] text-slate-400">Silakan transfer pembayaran ke rekening berikut:</p>
+                  <div class="bg-slate-900 border border-slate-800 px-4 py-1.5 rounded-lg inline-block">
+                    <p class="text-sm font-black text-indigo-400 tracking-wider">772-0988-123</p>
+                    <p class="text-[10px] font-bold text-slate-400">Bank BCA — PT UMKM Order Indonesia</p>
+                  </div>
+                  <p class="text-[9px] text-slate-500 font-medium">Pembayaran akan dikonfirmasi manual oleh Super Admin.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer (Fixed) -->
+          <div class="border-t border-slate-800 pt-3 space-y-3 shrink-0">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-400">Total Pembayaran:</span>
+              <span class="text-base font-black text-emerald-450">Rp 49.000 <span class="text-[10px] font-medium text-slate-500">/ bulan</span></span>
+            </div>
+
+            <div v-if="upgradeError" class="bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold p-2.5 rounded-lg text-center">
+              ⚠ {{ upgradeError }}
+            </div>
+
+            <button 
+              type="button" 
+              @click="handleUpgrade" 
+              :disabled="isUpgrading"
+              class="w-full theme-btn py-3 rounded-xl font-extrabold text-sm transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
+            >
+              <div v-if="isUpgrading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span v-else>⚡ Aktifkan Paket Pro Sekarang</span>
+            </button>
+            <p class="text-[9px] text-center text-slate-500">Dengan mengklik tombol di atas, Anda menyetujui Ketentuan Layanan kami.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -328,11 +578,92 @@ import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import api from '@/services/api';
 
-const isMobileMenuOpen = ref(false);
-
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+
+const isMobileMenuOpen = ref(false);
+
+// Upgrade to Pro State & Functions
+const isUpgrading = ref(false);
+const selectedPaymentMethod = ref('qris');
+const upgradeError = ref<string | null>(null);
+
+const isCheckingPending = ref(false);
+const pendingInvoice = ref<any>(null);
+
+async function checkPendingUpgrade() {
+  if (!authStore.token) return;
+  isCheckingPending.value = true;
+  pendingInvoice.value = null;
+  try {
+    const res = await api.get('/tenant/settings');
+    if (res.data.status === 'success') {
+      pendingInvoice.value = res.data.data.pending_invoice;
+    }
+  } catch (err) {
+    console.error('Failed to check pending upgrade status:', err);
+  } finally {
+    isCheckingPending.value = false;
+  }
+}
+
+watch(() => authStore.showUpgradeModal, (isOpen) => {
+  if (isOpen) {
+    checkPendingUpgrade();
+  }
+});
+
+function playSuccessChime() {
+  try {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    notes.forEach((freq, index) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.1);
+      
+      gain.gain.setValueAtTime(0, audioCtx.currentTime + index * 0.1);
+      gain.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + index * 0.1 + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + index * 0.1 + 0.4);
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + index * 0.1);
+      osc.stop(audioCtx.currentTime + index * 0.1 + 0.4);
+    });
+  } catch (e) {
+    console.error('Audio Context success chime failed', e);
+  }
+}
+
+async function handleUpgrade() {
+  if (isUpgrading.value) return;
+  isUpgrading.value = true;
+  upgradeError.value = null;
+  
+  // Simulate payment processing step for premium feel
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  try {
+    const response = await api.post('/tenant/upgrade-pro');
+    if (response.data.status === 'success') {
+      pendingInvoice.value = response.data.data.invoice;
+      playSuccessChime();
+    } else {
+      upgradeError.value = response.data.message || 'Gagal memproses upgrade';
+    }
+  } catch (err: any) {
+    if (err.response?.status === 400 && err.response?.data?.data?.invoice) {
+      pendingInvoice.value = err.response.data.data.invoice;
+    } else {
+      upgradeError.value = err.response?.data?.message || 'Terjadi kesalahan saat memproses upgrade.';
+    }
+  } finally {
+    isUpgrading.value = false;
+  }
+}
 
 const navItems = [
   { path: '/dashboard', label: 'Ringkasan', icon: '📊' },

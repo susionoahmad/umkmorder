@@ -15,6 +15,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ContactMessageController;
 
 // ==========================================
 // AUTHENTICATION & REGISTRATION ROUTES
@@ -23,6 +24,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/register', [RegisterController::class, 'register']);
 Route::get('/check-slug', [RegisterController::class, 'checkSlug']);
+Route::post('/contact', [ContactMessageController::class, 'store']);
 
 // ==========================================
 // 1. PUBLIC ROUTES (Katalog Publik)
@@ -69,6 +71,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifyActiveTenant::clas
     // Pengaturan Toko (Tenant Settings)
     Route::get('/tenant/settings', [TenantSettingsController::class, 'show']);
     Route::put('/tenant/settings', [TenantSettingsController::class, 'update']);
+    Route::post('/tenant/upgrade-pro', [TenantSettingsController::class, 'upgradePro']);
 
     // QR Code Generator
     Route::get('/catalog/qr', [TenantSettingsController::class, 'getQrCode']);

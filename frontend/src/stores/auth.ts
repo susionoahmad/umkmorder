@@ -38,6 +38,7 @@ export const useAuthStore = defineStore('auth', {
     originalAdminUser: JSON.parse(localStorage.getItem('admin_user') || 'null') as AuthUser | null,
     isLoading: false,
     error: null as string | null,
+    showUpgradeModal: false,
   }),
   getters: {
     isAuthenticated: (state) => !!state.token,
@@ -134,6 +135,10 @@ export const useAuthStore = defineStore('auth', {
         
         this.isLoading = false;
       }
+    },
+    updateTenant(tenant: AuthTenant) {
+      this.tenant = tenant;
+      localStorage.setItem('auth_tenant', JSON.stringify(tenant));
     },
   },
 });

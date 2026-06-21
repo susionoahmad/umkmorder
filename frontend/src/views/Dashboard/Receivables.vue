@@ -52,14 +52,14 @@
           </div>
         </div>
 
-        <router-link to="/dashboard/settings"
+        <button type="button" @click="authStore.showUpgradeModal = true"
           class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-extrabold text-white text-base transition-all duration-200 shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5"
           style="background: linear-gradient(135deg, #6366f1, #8b5cf6)"
         >
           <span>⚡</span>
           Upgrade ke Paket Pro — Rp 49.000/bulan
           <span>→</span>
-        </router-link>
+        </button>
         <p class="mt-3 text-xs text-slate-600">Langsung aktif setelah upgrade · Tanpa kontrak panjang</p>
       </div>
     </div>
@@ -324,6 +324,14 @@ watch(activeTab, (tab) => {
   if (tab === 'sales'       && salesRows.value.length === 0)   fetchSalesReport();
   if (tab === 'receivables' && receivables.value.length === 0) fetchReceivables();
   if (tab === 'turnover'    && turnoverRows.value.length === 0) fetchTurnoverReport();
+});
+
+watch(() => authStore.isPro, (isPro) => {
+  if (isPro) {
+    if (activeTab.value === 'sales') fetchSalesReport();
+    else if (activeTab.value === 'receivables') fetchReceivables();
+    else fetchTurnoverReport();
+  }
 });
 
 onMounted(() => {

@@ -22,12 +22,16 @@ class TenantSettingsController extends Controller
     public function show(): JsonResponse
     {
         $tenant = request()->user()->tenant()->with('catalogSetting')->first();
+        $pendingInvoice = \App\Models\BillingInvoice::where('tenant_id', $tenant->id)
+            ->where('status', 'pending')
+            ->first();
 
         return response()->json([
             'status' => 'success',
             'data' => [
                 'tenant' => $tenant,
                 'catalog_setting' => $tenant->catalogSetting,
+                'pending_invoice' => $pendingInvoice,
             ],
         ]);
     }
@@ -202,5 +206,77 @@ class TenantSettingsController extends Controller
                 ], 500);
             }
         }
+    }
+
+    public function upgradePro(Request $request): JsonResponse
+    {
+        $tenant = $request->user()->tenant;
+
+        // Cek jika sudah memiliki invoice pending
+        $existingInvoice = \App\Models\BillingInvoice::where('tenant_id', $tenant->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if ($existingInvoice) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Anda sudah memiliki permintaan upgrade pending. Silakan bayar tagihan Anda.',
+                'data' => [
+                    'invoice' => $existingInvoice,
+                    'tenant' => $tenant->load('catalogSetting'),
+                ],
+            ], 400);
+        }
+
+        $plan = \App\Models\Plan::where('slug', 'pro')->first();
+
+        if (!$plan) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Paket Pro tidak ditemukan di database.',
+            ], 404);
+        }
+
+        // Deactivate old active subscriptions for this tenant
+        \App\Models\Subscription::where('tenant_id', $tenant->id)
+            ->where('status', 'active')
+            ->update(['status' => 'expired']);
+
+        // Create new suspended/pending subscription
+        $subscription = \App\Models\Subscription::create([
+            'tenant_id' => $tenant->id,
+            'plan_id' => $plan->id,
+            'started_at' => \Carbon\Carbon::now(),
+            'expired_at' => \Carbon\Carbon::now()->addMonth(),
+            'status' => 'suspended', // suspended/pending until paid
+        ]);
+
+        // Create pending invoice
+        $invoiceNumber = 'INV-' . \Carbon\Carbon::now()->format('Ymd') . '-' . mt_rand(1000, 9999);
+        $invoice = \App\Models\BillingInvoice::create([
+            'tenant_id' => $tenant->id,
+            'subscription_id' => $subscription->id,
+            'invoice_number' => $invoiceNumber,
+            'amount' => $plan->monthly_price,
+            'status' => 'pending',
+            'due_date' => \Carbon\Carbon::now()->addDays(3),
+        ]);
+
+        // Keep subscription_plan as 'free' (features remain locked), but update subscription_status to suspended
+        $tenant->update([
+            'subscription_status' => 'suspended',
+        ]);
+
+        // Load relations
+        $tenant->load('catalogSetting');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Permintaan upgrade berhasil diajukan. Silakan lakukan pembayaran.',
+            'data' => [
+                'invoice' => $invoice,
+                'tenant' => $tenant,
+            ],
+        ]);
     }
 }

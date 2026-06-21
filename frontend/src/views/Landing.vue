@@ -1,44 +1,10 @@
 <template>
   <div class="landing-root">
     <!-- ========== NAVBAR ========== -->
-    <header class="navbar">
-      <div class="navbar-inner">
-        <div class="brand">
-          <div class="brand-icon">U</div>
-          <span class="brand-name">UMKMOrder</span>
-        </div>
-        <nav class="nav-links">
-          <a href="#fitur">Fitur</a>
-          <a href="#cara-kerja">Cara Kerja</a>
-          <a href="#harga">Harga</a>
-        </nav>
-        <div class="nav-actions">
-          <router-link v-if="authStore.isAuthenticated" to="/dashboard" class="btn-outline">Dashboard</router-link>
-          <template v-else>
-            <router-link to="/login" class="btn-outline">Masuk</router-link>
-            <router-link to="/register" class="btn-primary">Daftar Gratis →</router-link>
-          </template>
-        </div>
-        <!-- Mobile burger -->
-        <button class="burger" @click="mobileOpen = !mobileOpen" aria-label="Menu">
-          <span></span><span></span><span></span>
-        </button>
-      </div>
-      <!-- Mobile menu -->
-      <div class="mobile-menu" :class="{ open: mobileOpen }">
-        <a href="#fitur" @click="mobileOpen=false">Fitur</a>
-        <a href="#cara-kerja" @click="mobileOpen=false">Cara Kerja</a>
-        <a href="#harga" @click="mobileOpen=false">Harga</a>
-        <router-link v-if="authStore.isAuthenticated" to="/dashboard" @click="mobileOpen=false">Dashboard</router-link>
-        <template v-else>
-          <router-link to="/login" @click="mobileOpen=false">Masuk</router-link>
-          <router-link to="/register" class="mobile-cta" @click="mobileOpen=false">Daftar Gratis</router-link>
-        </template>
-      </div>
-    </header>
+    <LandingNavbar :activeSection="activeSection" />
 
     <!-- ========== HERO ========== -->
-    <section class="hero">
+    <section id="hero" class="hero">
       <div class="hero-bg-orb orb1"></div>
       <div class="hero-bg-orb orb2"></div>
       <div class="hero-inner">
@@ -226,30 +192,90 @@
     </section>
 
     <!-- ========== FOOTER ========== -->
-    <footer class="footer">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <div class="brand-icon small">U</div>
-          <span class="brand-name">UMKMOrder</span>
-        </div>
-        <p class="footer-copy">© 2025 UMKMOrder. Dibuat dengan ❤️ untuk UMKM Indonesia.</p>
-        <div class="footer-links">
-          <a href="#">Privasi</a>
-          <a href="#">Syarat</a>
-          <a href="#">Kontak</a>
-        </div>
-      </div>
-    </footer>
+    <LandingFooter />
+
+    <!-- ========== SIDE DOT NAVIGATION ========== -->
+    <div class="side-nav" :class="{ 'side-nav-visible': isScrolled }">
+      <a 
+        v-for="(label, id) in sectionLabels" 
+        :key="id" 
+        :href="'#' + id" 
+        class="side-dot-link" 
+        :class="{ active: activeSection === id }"
+      >
+        <span class="dot-label">{{ label }}</span>
+        <span class="dot-circle"></span>
+      </a>
+    </div>
+
+    <!-- ========== BACK TO TOP BUTTON ========== -->
+    <a 
+      href="#hero" 
+      class="back-to-top" 
+      :class="{ 'back-to-top-visible': isScrolled }"
+      aria-label="Kembali ke atas"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M18 15l-6-6-6 6"/>
+      </svg>
+    </a>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import LandingNavbar from '@/components/LandingNavbar.vue';
+import LandingFooter from '@/components/LandingFooter.vue';
 
 const authStore = useAuthStore();
-const mobileOpen = ref(false);
 const currentHost = computed(() => typeof window !== 'undefined' ? window.location.host : 'umkmorder.id');
+
+const isScrolled = ref(false);
+const activeSection = ref('hero');
+
+const sectionLabels = {
+  hero: 'Beranda',
+  fitur: 'Fitur',
+  'cara-kerja': 'Cara Kerja',
+  harga: 'Harga'
+};
+
+let observer: IntersectionObserver | null = null;
+
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 20;
+};
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll);
+  handleScroll();
+
+  const sections = ['hero', 'fitur', 'cara-kerja', 'harga'];
+  const options = {
+    root: null,
+    rootMargin: '-80px 0px -60% 0px',
+    threshold: 0
+  };
+
+  observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        activeSection.value = entry.target.id;
+      }
+    });
+  }, options);
+
+  sections.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) observer?.observe(el);
+  });
+});
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll);
+  observer?.disconnect();
+});
 
 const previewProducts = [
   { emoji: '🥚', name: 'Telur Asin Original', price: 'Rp 2.500/butir' },
@@ -344,6 +370,12 @@ const plans = [
   background: #030711;
   color: #e2e8f0;
   font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ===== GLOBAL STYLES ===== */
+:global(html, body) {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
   overflow-x: hidden;
 }
 
@@ -355,6 +387,12 @@ const plans = [
   background: rgba(3, 7, 17, 0.85);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.navbar-scrolled {
+  background: rgba(3, 7, 17, 0.95);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.15);
 }
 .navbar-inner {
   max-width: 1200px;
@@ -364,6 +402,10 @@ const plans = [
   display: flex;
   align-items: center;
   gap: 32px;
+  transition: height 0.3s ease;
+}
+.navbar-scrolled .navbar-inner {
+  height: 56px;
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .brand-icon {
@@ -375,12 +417,39 @@ const plans = [
 }
 .brand-icon.small { width: 30px; height: 30px; font-size: 14px; border-radius: 8px; }
 .brand-name { font-weight: 800; font-size: 18px; color: #f1f5f9; letter-spacing: -0.5px; }
-.nav-links { display: flex; gap: 28px; margin-left: auto; }
+.nav-links {
+  display: flex;
+  gap: 28px;
+  margin-left: auto;
+  height: 100%;
+  align-items: center;
+}
 .nav-links a {
-  font-size: 14px; font-weight: 500; color: #94a3b8;
-  text-decoration: none; transition: color 0.2s;
+  font-size: 14px;
+  font-weight: 500;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  position: relative;
 }
 .nav-links a:hover { color: #e2e8f0; }
+.nav-links a.active {
+  color: #a5b4fc;
+  font-weight: 600;
+}
+.nav-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+}
 .nav-actions { display: flex; align-items: center; gap: 10px; }
 .btn-outline {
   padding: 8px 18px; border-radius: 10px; font-size: 14px; font-weight: 600;
@@ -396,15 +465,62 @@ const plans = [
 }
 .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.45); }
 .burger {
-  display: none; flex-direction: column; gap: 5px;
-  background: none; border: none; cursor: pointer; padding: 4px; margin-left: auto;
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin-left: auto;
+  position: relative;
+  z-index: 101;
 }
-.burger span { display: block; width: 22px; height: 2px; background: #94a3b8; border-radius: 2px; }
+.burger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #94a3b8;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.burger-active span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+  background: #f1f5f9;
+}
+.burger-active span:nth-child(2) {
+  opacity: 0;
+}
+.burger-active span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+  background: #f1f5f9;
+}
 .mobile-menu {
-  display: none; flex-direction: column; gap: 4px;
-  padding: 12px 24px 16px; border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 24px;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-top: 1px solid transparent;
+  background: rgba(3, 7, 17, 0.95);
+  backdrop-filter: blur(20px);
 }
-.mobile-menu.open { display: flex; }
+.mobile-menu.open {
+  padding: 16px 24px 24px;
+  max-height: 400px;
+  opacity: 1;
+  transform: translateY(0);
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.mobile-menu-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin: 8px 12px;
+}
 .mobile-menu a {
   padding: 10px 12px; font-size: 15px; font-weight: 500;
   color: #94a3b8; text-decoration: none; border-radius: 8px; transition: all 0.2s;

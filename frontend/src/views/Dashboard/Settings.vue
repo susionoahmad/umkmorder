@@ -517,10 +517,10 @@
               </div>
               <p class="text-sm font-bold text-slate-200">QR Code Katalog — Fitur Pro</p>
               <p class="text-xs text-slate-400 max-w-xs">Upgrade ke Paket Pro untuk membuat & mengunduh QR Code katalog Anda.</p>
-              <router-link to="/dashboard/settings"
+              <button type="button" @click="authStore.showUpgradeModal = true"
                 class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all shadow-md shadow-indigo-500/30 hover:-translate-y-0.5"
                 style="background: linear-gradient(135deg, #6366f1, #8b5cf6)"
-              >⚡ Upgrade ke Pro</router-link>
+              >⚡ Upgrade ke Pro</button>
             </div>
           </div>
 

@@ -132,6 +132,7 @@ const navItems = [
   { path: '/admin/subscriptions', label: 'Langganan', icon: '🔑' },
   { path: '/admin/plans', label: 'Paket Fitur', icon: '🏷️' },
   { path: '/admin/billing', label: 'Tagihan', icon: '💳' },
+  { path: '/admin/users', label: 'Pengguna', icon: '👤' },
   { path: '/admin/support', label: 'Support', icon: '🛠️' },
   { path: '/admin/settings', label: 'Pengaturan', icon: '⚙️' },
 ];

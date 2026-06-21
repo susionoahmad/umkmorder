@@ -108,6 +108,9 @@ Route::middleware(['auth:sanctum', 'super_admin'])->prefix('admin')->group(funct
     // Plans Management
     Route::apiResource('/plans', \App\Http\Controllers\Admin\PlanController::class);
 
+    // User Management
+    Route::apiResource('/users', \App\Http\Controllers\Admin\UserController::class);
+
     // Billing Invoices Management
     Route::get('/billing-invoices', [\App\Http\Controllers\Admin\BillingInvoiceController::class, 'index']);
     Route::post('/billing-invoices', [\App\Http\Controllers\Admin\BillingInvoiceController::class, 'store']);

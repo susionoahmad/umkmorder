@@ -8,19 +8,19 @@ trait BelongsToTenant
 {
     protected static function bootBelongsToTenant()
     {
-        // Otomatis filter query berdasarkan tenant yang sedang login
+        // Otomatis filter query berdasarkan tenant yang sedang login atau yang sedang dikunjungi
         static::addGlobalScope('tenant', function (Builder $builder) {
-            $user = request()->user();
-            if ($user && $user->tenant_id) {
-                $builder->where($builder->getModel()->getTable() . '.tenant_id', $user->tenant_id);
+            $tenantId = request('current_tenant_id') ?? (request()->user()?->tenant_id ?? null);
+            if ($tenantId) {
+                $builder->where($builder->getModel()->getTable() . '.tenant_id', $tenantId);
             }
         });
 
         // Otomatis isi tenant_id saat create data baru
         static::creating(function ($model) {
-            $user = request()->user();
-            if ($user && $user->tenant_id) {
-                $model->tenant_id = $user->tenant_id;
+            $tenantId = request('current_tenant_id') ?? (request()->user()?->tenant_id ?? null);
+            if ($tenantId) {
+                $model->tenant_id = $tenantId;
             }
         });
     }

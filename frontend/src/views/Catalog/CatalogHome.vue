@@ -212,9 +212,9 @@
       @click.self="closeProductDetail"
     >
       <div 
-        class="detail-modal-card w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row transition-all duration-300 transform relative"
+        class="detail-modal-card w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row transition-all duration-300 transform relative max-h-[90vh] overflow-y-auto md:overflow-visible"
         :class="showModalContent ? 'opacity-100 scale-100' : 'opacity-0 scale-95'"
-        :style="themeVars"
+        :style="{ ...themeVars, background: 'var(--bg-surface)' }"
       >
         <!-- Close Button -->
         <button 
@@ -342,10 +342,12 @@ import type { Product, PriceTier } from '@/stores/catalog';
 const selectedProduct = ref<Product | null>(null);
 const showModalContent = ref(false);
 const modalQty = ref(1);
+let lastOpenedTime = 0;
 
 function openProductDetail(product: Product) {
   selectedProduct.value = product;
   modalQty.value = 1;
+  lastOpenedTime = Date.now();
   // Trigger animation next tick
   setTimeout(() => {
     showModalContent.value = true;
@@ -353,6 +355,7 @@ function openProductDetail(product: Product) {
 }
 
 function closeProductDetail() {
+  if (Date.now() - lastOpenedTime < 350) return;
   showModalContent.value = false;
   // Delay clearing product to allow close animation to finish
   setTimeout(() => {

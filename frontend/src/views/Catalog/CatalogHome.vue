@@ -83,11 +83,11 @@
                 v-if="product.show_image && product.image_url"
                 :src="product.image_url"
                 :alt="product.name"
-                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                class="w-full h-full object-cover transition-transform duration-500 product-img"
               />
               <div v-else class="w-full h-full flex items-center justify-center text-4xl bg-slate-800/10">📦</div>
               <!-- Zoom overlay on hover -->
-              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center text-white text-xs font-semibold gap-1">
+              <div class="hover-overlay absolute inset-0 bg-black/40 opacity-0 transition duration-300 flex items-center justify-center text-white text-xs font-semibold gap-1">
                 <span>🔍</span> Lihat Detail
               </div>
             </div>
@@ -510,11 +510,7 @@ function formatRupiah(val: string | number): string {
   border: 1px solid var(--border-color);
   transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
 }
-.catalog-card.product-card:hover {
-  border-color: rgba(var(--theme-primary-rgb), 0.5);
-  box-shadow: 0 8px 30px rgba(var(--theme-primary-rgb), 0.12);
-  transform: translateY(-3px);
-}
+
 
 /* ─── Marketplace Grid ──────────────────────────────── */
 .catalog-products-grid {
@@ -609,15 +605,35 @@ function formatRupiah(val: string | number): string {
   color: var(--text-secondary);
   cursor: pointer;
 }
-.detail-btn:hover {
-  background-color: rgba(var(--theme-primary-rgb), 0.08);
-  border-color: rgba(var(--theme-primary-rgb), 0.3);
-  color: var(--text-primary);
-}
 
 /* ─── Detail Modal Card ──────────────────────────── */
 .detail-modal-card {
   border: 1px solid var(--border-color);
   transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Hover Overlay & safety pointer-events ──────── */
+.hover-overlay {
+  pointer-events: none;
+}
+
+/* ─── Desktop Only Hover Effects ──────────────────── */
+@media (hover: hover) {
+  .catalog-card.product-card:hover {
+    border-color: rgba(var(--theme-primary-rgb), 0.5);
+    box-shadow: 0 8px 30px rgba(var(--theme-primary-rgb), 0.12);
+    transform: translateY(-3px);
+  }
+  .catalog-thumb:hover .product-img {
+    transform: scale(1.1);
+  }
+  .catalog-thumb:hover .hover-overlay {
+    opacity: 1;
+  }
+  .detail-btn:hover {
+    background-color: rgba(var(--theme-primary-rgb), 0.08);
+    border-color: rgba(var(--theme-primary-rgb), 0.3);
+    color: var(--text-primary);
+  }
 }
 </style>

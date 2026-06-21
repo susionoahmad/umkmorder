@@ -78,7 +78,9 @@
             <div 
               class="catalog-thumb relative overflow-hidden cursor-pointer group"
               @click="openProductDetail(product)"
-              @touchend.stop.prevent="openProductDetail(product)"
+              @touchstart="handleTouchStart"
+              @touchmove="handleTouchMove"
+              @touchend="handleTouchEnd(product, $event)"
             >
               <img
                 v-if="product.show_image && product.image_url"
@@ -99,7 +101,9 @@
                 class="text-sm font-bold leading-snug line-clamp-2 cursor-pointer hover:underline" 
                 :style="{ color: 'var(--text-primary)' }"
                 @click="openProductDetail(product)"
-                @touchend.stop.prevent="openProductDetail(product)"
+                @touchstart="handleTouchStart"
+                @touchmove="handleTouchMove"
+                @touchend="handleTouchEnd(product, $event)"
               >
                 {{ product.name }}
               </h3>
@@ -358,6 +362,23 @@ function openProductDetail(product: Product) {
 function closeProductDetail() {
   if (Date.now() - lastOpenedTime < 350) return;
   selectedProduct.value = null;
+}
+
+let isScrolling = false;
+
+function handleTouchStart() {
+  isScrolling = false;
+}
+
+function handleTouchMove() {
+  isScrolling = true;
+}
+
+function handleTouchEnd(product: Product, e: TouchEvent) {
+  if (!isScrolling) {
+    e.preventDefault();
+    openProductDetail(product);
+  }
 }
 
 function resolvedPriceForSelected(product: Product, qty: number): number {

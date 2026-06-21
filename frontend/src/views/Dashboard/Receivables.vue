@@ -275,6 +275,7 @@
 import { computed, defineComponent, h, onMounted, ref, watch } from 'vue';
 import api from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
+import { isWebView, downloadFileInWebView } from '@/services/webview';
 
 const authStore = useAuthStore();
 
@@ -393,9 +394,21 @@ async function exportReport() {
 
     const res = await api.get(url, { responseType: 'blob' });
     const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8;' });
+    const filename = `laporan_${activeTab.value}_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    if (isWebView()) {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+        downloadFileInWebView(base64data, filename, 'text/csv');
+      };
+      return;
+    }
+
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `laporan_${activeTab.value}_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

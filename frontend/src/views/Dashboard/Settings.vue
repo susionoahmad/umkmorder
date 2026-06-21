@@ -561,6 +561,7 @@
 import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue';
 import api, { uploadFile } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
+import { isWebView, downloadFileInWebView } from '@/services/webview';
 
 const authStore = useAuthStore();
 const originalTheme = ref('default');
@@ -970,9 +971,17 @@ async function loadQrCode() {
 function downloadQr() {
   if (!qrImage.value) return;
   const ext = qrFormat.value === 'svg' ? 'svg' : 'png';
+  const mimeType = qrFormat.value === 'svg' ? 'image/svg+xml' : 'image/png';
+  const filename = `qrcode-${form.value.slug || 'toko'}.${ext}`;
+
+  if (isWebView()) {
+    downloadFileInWebView(qrImage.value, filename, mimeType);
+    return;
+  }
+
   const link = document.createElement('a');
   link.href = qrImage.value;
-  link.download = `qrcode-${form.value.slug || 'toko'}.${ext}`;
+  link.download = filename;
   document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 

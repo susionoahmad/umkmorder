@@ -75,19 +75,30 @@
             class="catalog-card product-card rounded-2xl flex flex-col transition duration-300 shadow-md backdrop-blur-md overflow-hidden"
           >
             <!-- Gambar Produk -->
-            <div class="catalog-thumb relative overflow-hidden">
+            <div 
+              class="catalog-thumb relative overflow-hidden cursor-pointer group"
+              @click="openProductDetail(product)"
+            >
               <img
                 v-if="product.show_image && product.image_url"
                 :src="product.image_url"
                 :alt="product.name"
-                class="w-full h-full object-cover"
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div v-else class="w-full h-full flex items-center justify-center text-4xl">📦</div>
+              <div v-else class="w-full h-full flex items-center justify-center text-4xl bg-slate-800/10">📦</div>
+              <!-- Zoom overlay on hover -->
+              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center text-white text-xs font-semibold gap-1">
+                <span>🔍</span> Lihat Detail
+              </div>
             </div>
 
             <!-- Info Produk -->
             <div class="flex flex-col flex-1 p-3 gap-1.5">
-              <h3 class="text-sm font-bold leading-snug line-clamp-2" :style="{ color: 'var(--text-primary)' }">
+              <h3 
+                class="text-sm font-bold leading-snug line-clamp-2 cursor-pointer hover:underline" 
+                :style="{ color: 'var(--text-primary)' }"
+                @click="openProductDetail(product)"
+              >
                 {{ product.name }}
               </h3>
 
@@ -154,13 +165,22 @@
                 </span>
               </div>
 
-              <!-- Tombol Tambah -->
-              <button
-                @click="addToCart(product)"
-                class="theme-btn w-full py-2 px-3 rounded-xl text-xs font-bold transition duration-300 shadow-md"
-              >
-                + Tambah ke Keranjang
-              </button>
+              <!-- Tombol Detail & Tambah -->
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  @click="openProductDetail(product)"
+                  class="detail-btn py-2 px-2.5 rounded-xl text-xs font-bold transition duration-300 flex items-center justify-center gap-1"
+                >
+                  👁️ Detail
+                </button>
+                <button
+                  @click="addToCart(product)"
+                  class="theme-btn flex-1 py-2 px-3 rounded-xl text-xs font-bold transition duration-300 shadow-md"
+                >
+                  + Keranjang
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -184,15 +204,172 @@
         Lanjut Checkout →
       </router-link>
     </div>
+
+    <!-- Product Detail Modal -->
+    <div 
+      v-if="selectedProduct" 
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-black/60 transition-opacity duration-300"
+      @click.self="closeProductDetail"
+    >
+      <div 
+        class="detail-modal-card w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row transition-all duration-300 transform relative"
+        :class="showModalContent ? 'opacity-100 scale-100' : 'opacity-0 scale-95'"
+        :style="themeVars"
+      >
+        <!-- Close Button -->
+        <button 
+          @click="closeProductDetail"
+          class="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition border border-white/10"
+          title="Tutup"
+        >
+          ✕
+        </button>
+
+        <!-- Product Image (Left side) -->
+        <div class="md:w-1/2 bg-slate-800/10 flex items-center justify-center relative min-h-[220px] md:min-h-[380px] select-none">
+          <img 
+            v-if="selectedProduct.show_image && selectedProduct.image_url" 
+            :src="selectedProduct.image_url" 
+            :alt="selectedProduct.name" 
+            class="w-full h-full object-cover absolute inset-0"
+          />
+          <div v-else class="text-7xl">📦</div>
+        </div>
+
+        <!-- Product Info (Right side) -->
+        <div class="md:w-1/2 p-6 sm:p-8 flex flex-col justify-between gap-6" style="background: var(--bg-surface);">
+          <div class="space-y-4 overflow-y-auto max-h-[240px] md:max-h-[340px] pr-2">
+            <div>
+              <span v-if="selectedProduct.sku" class="text-[10px] tracking-widest font-mono uppercase text-muted block mb-1">
+                SKU: {{ selectedProduct.sku }}
+              </span>
+              <h2 class="text-xl sm:text-2xl font-extrabold leading-tight" :style="{ color: 'var(--text-primary)' }">
+                {{ selectedProduct.name }}
+              </h2>
+            </div>
+
+            <!-- Price & Tiers -->
+            <div class="price-section py-3 border-y" :style="{ borderColor: 'var(--border-color)' }">
+              <div v-if="selectedProduct.price_tiers && selectedProduct.price_tiers.length > 0">
+                <p class="text-xs text-muted mb-2 font-semibold">Harga Grosir (Tier):</p>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <div 
+                    v-for="(tier, i) in selectedProduct.price_tiers" 
+                    :key="i"
+                    class="tier-row flex justify-between items-center p-2 rounded"
+                    :class="{ 'tier-active': isActiveTier(selectedProduct, tier, modalQty) }"
+                  >
+                    <span>{{ tier.min_qty }}{{ tier.max_qty ? `–${tier.max_qty}` : '+' }} pcs</span>
+                    <span class="font-extrabold theme-accent-text">Rp {{ formatRupiah(tier.unit_price.toString()) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else-if="tenant?.settings?.show_price !== false">
+                <p class="text-xs text-muted mb-1">Harga Satuan:</p>
+                <span class="text-xl font-extrabold theme-accent-text">Rp {{ formatRupiah(selectedProduct.price) }}</span>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+              <p class="text-xs font-semibold text-sub mb-1.5">Deskripsi Produk:</p>
+              <p 
+                v-if="selectedProduct.description" 
+                class="text-sm leading-relaxed whitespace-pre-line text-sub text-justify"
+              >
+                {{ selectedProduct.description }}
+              </p>
+              <p v-else class="text-sm italic text-muted">Tidak ada deskripsi untuk produk ini.</p>
+            </div>
+          </div>
+
+          <!-- Bottom Purchase Row -->
+          <div class="pt-4 border-t" :style="{ borderColor: 'var(--border-color)' }">
+            <!-- Active Calculated Price -->
+            <div v-if="selectedProduct.price_tiers?.length && tenant?.settings?.show_price !== false" class="flex justify-between items-center mb-3">
+              <span class="text-xs text-muted">Harga satuan saat ini:</span>
+              <span class="text-sm font-extrabold theme-accent-text">
+                Rp {{ formatRupiah(resolvedPriceForSelected(selectedProduct, modalQty).toString()) }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between gap-4">
+              <!-- Qty Picker -->
+              <div class="flex items-center gap-1">
+                <button 
+                  type="button" 
+                  @click="modalQty = Math.max(1, modalQty - 1)"
+                  class="catalog-qty-btn w-8 h-8 rounded-lg font-bold text-base flex items-center justify-center transition"
+                >−</button>
+                <span class="w-8 text-center text-sm font-extrabold" :style="{ color: 'var(--text-primary)' }">
+                  {{ modalQty }}
+                </span>
+                <button 
+                  type="button" 
+                  @click="modalQty = modalQty + 1"
+                  class="catalog-qty-btn w-8 h-8 rounded-lg font-bold text-base flex items-center justify-center transition"
+                >+</button>
+              </div>
+
+              <!-- Total price & Add button -->
+              <div class="flex-1 text-right">
+                <div v-if="tenant?.settings?.show_price !== false" class="text-[10px] text-muted mb-1">
+                  Total: <strong class="theme-accent-text text-sm">Rp {{ formatRupiah((resolvedPriceForSelected(selectedProduct, modalQty) * modalQty).toString()) }}</strong>
+                </div>
+                <button 
+                  @click="addSelectedToCart"
+                  class="theme-btn py-2.5 px-4 rounded-xl text-xs font-bold transition duration-300 w-full"
+                >
+                  + Keranjang
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, watch } from 'vue';
+import { computed, onMounted, reactive, watch, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useCatalogStore } from '@/stores/catalog';
 import { useCartStore, resolveUnitPrice } from '@/stores/cart';
 import type { Product, PriceTier } from '@/stores/catalog';
+
+// Product Detail Modal State
+const selectedProduct = ref<Product | null>(null);
+const showModalContent = ref(false);
+const modalQty = ref(1);
+
+function openProductDetail(product: Product) {
+  selectedProduct.value = product;
+  modalQty.value = 1;
+  // Trigger animation next tick
+  setTimeout(() => {
+    showModalContent.value = true;
+  }, 30);
+}
+
+function closeProductDetail() {
+  showModalContent.value = false;
+  // Delay clearing product to allow close animation to finish
+  setTimeout(() => {
+    selectedProduct.value = null;
+  }, 250);
+}
+
+function resolvedPriceForSelected(product: Product, qty: number): number {
+  return resolveUnitPrice(product.price_tiers ?? [], parseFloat(product.price), qty);
+}
+
+function addSelectedToCart() {
+  if (selectedProduct.value) {
+    cartStore.addToCart(selectedProduct.value, modalQty.value);
+    closeProductDetail();
+  }
+}
 
 const route      = useRoute();
 const store      = useCatalogStore();
@@ -423,5 +600,24 @@ function formatRupiah(val: string | number): string {
 .theme-spinner {
   border-color: var(--theme-primary);
   border-top-color: transparent;
+}
+
+/* ─── Detail Button ──────────────────────────────── */
+.detail-btn {
+  background-color: var(--bg-surface-alt);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.detail-btn:hover {
+  background-color: rgba(var(--theme-primary-rgb), 0.08);
+  border-color: rgba(var(--theme-primary-rgb), 0.3);
+  color: var(--text-primary);
+}
+
+/* ─── Detail Modal Card ──────────────────────────── */
+.detail-modal-card {
+  border: 1px solid var(--border-color);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 </style>

@@ -125,6 +125,7 @@ export const useAuthStore = defineStore('auth', {
         this.tenant = null;
         this.originalAdminToken = null;
         this.originalAdminUser = null;
+        this.error = null;
 
         // Clear local storage
         localStorage.removeItem('auth_token');

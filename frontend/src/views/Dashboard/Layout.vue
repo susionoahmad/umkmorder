@@ -914,12 +914,12 @@ const currentTitle = computed(() => {
   return 'Ringkasan Bisnis';
 });
 
-function handleLogout() {
+async function handleLogout() {
   stopPolling();
   unprocessedCount.value = 0;
   latestUnprocessedOrders.value = [];
   recentPaidReceivables.value = [];
-  authStore.logout();
+  await authStore.logout();
   router.push('/login');
 }
 </script>

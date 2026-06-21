@@ -206,10 +206,11 @@
     </div>
 
     <!-- Product Detail Modal -->
-    <Transition name="modal-fade">
+    <Teleport to="body">
+      <Transition name="modal-fade">
       <div 
         v-if="selectedProduct" 
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-black/60"
+        class="product-detail-overlay fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-black/60"
         @click.self="closeProductDetail"
       >
         <div 
@@ -328,12 +329,13 @@
           </div>
         </div>
       </div>
-    </Transition>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, watch, ref } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, watch, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useCatalogStore } from '@/stores/catalog';
 import { useCartStore, resolveUnitPrice } from '@/stores/cart';
@@ -365,6 +367,21 @@ function addSelectedToCart() {
     closeProductDetail();
   }
 }
+
+let previousBodyOverflow = '';
+
+watch(selectedProduct, (product, oldProduct) => {
+  if (product && !oldProduct) {
+    previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  } else if (!product && oldProduct) {
+    document.body.style.overflow = previousBodyOverflow;
+  }
+});
+
+onUnmounted(() => {
+  document.body.style.overflow = previousBodyOverflow;
+});
 
 const route      = useRoute();
 const store      = useCatalogStore();
@@ -602,6 +619,12 @@ function formatRupiah(val: string | number): string {
 }
 
 /* ─── Detail Modal Card ──────────────────────────── */
+.product-detail-overlay {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior: contain;
+}
+
 .detail-modal-card {
   border: 1px solid var(--border-color);
   transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);

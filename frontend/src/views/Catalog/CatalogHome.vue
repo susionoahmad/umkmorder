@@ -78,6 +78,7 @@
             <div 
               class="catalog-thumb relative overflow-hidden cursor-pointer group"
               @click="openProductDetail(product)"
+              @touchend.stop.prevent="openProductDetail(product)"
             >
               <img
                 v-if="product.show_image && product.image_url"
@@ -98,6 +99,7 @@
                 class="text-sm font-bold leading-snug line-clamp-2 cursor-pointer hover:underline" 
                 :style="{ color: 'var(--text-primary)' }"
                 @click="openProductDetail(product)"
+                @touchend.stop.prevent="openProductDetail(product)"
               >
                 {{ product.name }}
               </h3>
@@ -170,6 +172,7 @@
                 <button
                   type="button"
                   @click="openProductDetail(product)"
+                  @touchend.stop.prevent="openProductDetail(product)"
                   class="detail-btn py-2 px-2.5 rounded-xl text-xs font-bold transition duration-300 flex items-center justify-center gap-1"
                 >
                   👁️ Detail

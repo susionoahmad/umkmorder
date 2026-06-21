@@ -1,7 +1,5 @@
-const CACHE_NAME = 'umkmorder-cache-v1';
+const CACHE_NAME = 'umkmorder-cache-v2';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
   '/vite.svg',
   '/manifest.webmanifest',
   '/icon-192.png',
@@ -14,6 +12,19 @@ self.addEventListener('install', (event) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((cacheName) => cacheName !== CACHE_NAME)
+          .map((cacheName) => caches.delete(cacheName))
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
@@ -22,12 +33,28 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  const acceptsHtml = event.request.headers.get('accept')?.includes('text/html');
+
+  if (event.request.mode === 'navigate' || acceptsHtml) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cachedResponse) => cachedResponse || caches.match('/index.html')))
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
         // Cache newly fetched assets if valid
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
@@ -36,12 +63,7 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return response;
-      }).catch(() => {
-        // Offline fallback for html pages
-        if (event.request.headers.get('accept')?.includes('text/html')) {
-          return caches.match('/index.html');
-        }
-      });
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });

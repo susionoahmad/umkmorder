@@ -15,6 +15,8 @@ class Product extends Model
         'name',
         'sku',
         'price',
+        'stock',
+        'unit',
         'description',
         'image_url',
         'show_image',
@@ -25,6 +27,7 @@ class Product extends Model
         'price'      => 'decimal:2',
         'show_image' => 'boolean',
         'is_active'  => 'boolean',
+        'stock'      => 'integer',
     ];
 
     public function orderItems()

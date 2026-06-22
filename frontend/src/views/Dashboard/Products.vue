@@ -61,9 +61,18 @@
           <!-- Info Produk -->
           <div class="flex flex-col flex-1 p-3 gap-1.5">
             <h4 class="font-bold text-slate-100 text-sm leading-snug line-clamp-2">{{ product.name }}</h4>
-            <p class="text-[10px] text-slate-600 font-mono">{{ product.sku || '—' }}</p>
+            <div class="flex justify-between items-center text-[10px] text-slate-600 font-mono">
+              <span>SKU: {{ product.sku || '—' }}</span>
+              <span>
+                Stok: 
+                <strong v-if="product.stock !== null && product.stock !== undefined" :class="product.stock <= 0 ? 'text-red-400' : 'text-slate-300'">
+                  {{ product.stock }} {{ product.unit || 'pcs' }}
+                </strong>
+                <strong v-else class="text-slate-400">∞</strong>
+              </span>
+            </div>
             <p class="theme-accent-text font-extrabold text-sm mt-auto pt-1">
-              Rp {{ formatRupiah(product.price) }}
+              Rp {{ formatRupiah(product.price) }}<span v-if="product.unit" class="text-xs text-slate-500 font-normal"> / {{ product.unit }}</span>
             </p>
           </div>
 
@@ -126,6 +135,39 @@
                 placeholder="3500" 
                 class="w-full bg-slate-950 border border-slate-850 rounded-xl py-3 px-4 text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
               />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-400 mb-2">Jenis Satuan</label>
+              <input 
+                v-model="form.unit" 
+                type="text" 
+                placeholder="Contoh: pcs, kg, box, dll." 
+                class="w-full bg-slate-950 border border-slate-850 rounded-xl py-3 px-4 text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-400 mb-2">Kelola Stok</label>
+              <div class="flex items-center gap-2">
+                <input 
+                  v-model="form.manage_stock" 
+                  id="manage_stock" 
+                  type="checkbox" 
+                  class="w-5 h-5 rounded bg-slate-950 border-slate-850 text-indigo-600 focus:ring-indigo-600 shrink-0"
+                />
+                <input 
+                  v-if="form.manage_stock"
+                  v-model.number="form.stock" 
+                  type="number" 
+                  required
+                  min="0"
+                  placeholder="Jumlah stok" 
+                  class="flex-1 bg-slate-950 border border-slate-850 rounded-xl py-2 px-3 text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition min-w-0"
+                />
+                <span v-else class="text-xs text-slate-500">Tak terbatas</span>
+              </div>
             </div>
           </div>
 
@@ -323,6 +365,9 @@ const form = ref({
   show_image: true,
   is_active: true,
   price_tiers: [] as { min_qty: number; max_qty_input: string; unit_price: number }[],
+  manage_stock: false,
+  stock: '',
+  unit: '',
 });
 
 // Tier error
@@ -363,6 +408,9 @@ function openAddModal() {
     show_image: true,
     is_active: true,
     price_tiers: [],
+    manage_stock: false,
+    stock: '',
+    unit: '',
   };
   uploadImageError.value = null;
   showModal.value = true;
@@ -386,6 +434,9 @@ function openEditModal(product: any) {
       max_qty_input: t.max_qty !== null && t.max_qty !== undefined ? String(t.max_qty) : '',
       unit_price: parseFloat(t.unit_price),
     })),
+    manage_stock: product.stock !== null && product.stock !== undefined,
+    stock: product.stock !== null && product.stock !== undefined ? String(product.stock) : '',
+    unit: product.unit || '',
   };
   uploadImageError.value = null;
   showModal.value = true;
@@ -478,6 +529,13 @@ async function saveProduct() {
       unit_price: t.unit_price,
     }));
 
+    // Robustly parse the stock value, ensuring we don't send NaN or invalid types
+    let stockVal: number | null = null;
+    if (form.value.manage_stock) {
+      const parsed = parseInt(String(form.value.stock), 10);
+      stockVal = isNaN(parsed) ? 0 : parsed;
+    }
+
     const payload = {
       name:        form.value.name,
       sku:         form.value.sku,
@@ -487,6 +545,8 @@ async function saveProduct() {
       show_image:  form.value.show_image,
       is_active:   form.value.is_active,
       price_tiers: tiersPayload,
+      stock:       stockVal,
+      unit:        form.value.unit || null,
     };
 
     let response;
@@ -498,7 +558,17 @@ async function saveProduct() {
 
     if (response.data.status === 'success') {
       showModal.value = false;
-      fetchProducts(); // Refresh list
+      const savedProduct = response.data.data;
+      if (savedProduct) {
+        const idx = products.value.findIndex(p => p.id === savedProduct.id);
+        if (idx !== -1) {
+          products.value[idx] = savedProduct;
+        } else {
+          fetchProducts();
+        }
+      } else {
+        fetchProducts();
+      }
     } else {
       modalError.value = response.data.message || 'Gagal menyimpan produk';
     }

@@ -108,6 +108,18 @@
                 {{ product.name }}
               </h3>
 
+              <!-- Stock Info -->
+              <div class="text-[10px] text-muted font-semibold flex items-center gap-1.5">
+                <span>📦</span>
+                <span v-if="product.stock !== null && product.stock !== undefined">
+                  Stok: 
+                  <strong :class="product.stock <= 0 ? 'text-red-400 font-extrabold' : 'text-sub'">
+                    {{ product.stock <= 0 ? 'Habis' : `${product.stock} ${product.unit || 'pcs'}` }}
+                  </strong>
+                </span>
+                <span v-else>Stok: <strong class="text-sub">Tersedia</strong></span>
+              </div>
+
               <!-- Harga Grosir (Tier Pricing) -->
               <div v-if="product.price_tiers && product.price_tiers.length > 0" class="tier-badge-list mt-1 flex flex-col gap-0.5">
                 <div
@@ -117,7 +129,7 @@
                   :class="{ 'tier-active': isActiveTier(product, tier, productQty[product.id] || 1) }"
                 >
                   <span class="font-semibold">
-                    {{ tier.min_qty }}{{ tier.max_qty ? `–${tier.max_qty}` : '+' }}×
+                    {{ tier.min_qty }}{{ tier.max_qty ? `–${tier.max_qty}` : '+' }} {{ product.unit || 'pcs' }} ×
                   </span>
                   <span class="font-extrabold theme-accent-text">
                     Rp {{ formatRupiah(tier.unit_price.toString()) }}
@@ -128,7 +140,7 @@
               <!-- Harga Tunggal jika tidak ada tier -->
               <div v-else-if="tenant?.settings?.show_price !== false">
                 <p class="theme-accent-text font-extrabold text-sm">
-                  Rp {{ formatRupiah(product.price) }}
+                  Rp {{ formatRupiah(product.price) }}<span v-if="product.unit" class="text-xs text-muted font-normal"> / {{ product.unit }}</span>
                 </p>
               </div>
 
@@ -152,18 +164,20 @@
                   <button
                     type="button"
                     @click="decrementQty(product.id)"
-                    class="catalog-qty-btn w-7 h-7 rounded-lg font-bold text-base flex items-center justify-center transition"
+                    :disabled="product.stock !== null && product.stock <= 0"
+                    class="catalog-qty-btn w-7 h-7 rounded-lg font-bold text-base flex items-center justify-center transition disabled:opacity-50"
                   >−</button>
                   <span class="w-8 text-center text-sm font-extrabold" :style="{ color: 'var(--text-primary)' }">
-                    {{ productQty[product.id] || 1 }}
+                    {{ product.stock !== null && product.stock <= 0 ? 0 : (productQty[product.id] || 1) }}
                   </span>
                   <button
                     type="button"
                     @click="incrementQty(product.id)"
-                    class="catalog-qty-btn w-7 h-7 rounded-lg font-bold text-base flex items-center justify-center transition"
+                    :disabled="product.stock !== null && ((productQty[product.id] || 1) >= product.stock || product.stock <= 0)"
+                    class="catalog-qty-btn w-7 h-7 rounded-lg font-bold text-base flex items-center justify-center transition disabled:opacity-50"
                   >+</button>
                 </div>
-                <span v-if="product.price_tiers?.length && tenant?.settings?.show_price !== false"
+                <span v-if="product.price_tiers?.length && tenant?.settings?.show_price !== false && !(product.stock !== null && product.stock <= 0)"
                       class="text-[10px] text-muted">
                   × {{ productQty[product.id] || 1 }} = <span class="font-bold theme-accent-text">
                     Rp {{ formatRupiah((resolvedPrice(product) * (productQty[product.id] || 1)).toString()) }}
@@ -183,9 +197,10 @@
                 </button>
                 <button
                   @click="addToCart(product)"
-                  class="theme-btn flex-1 py-2 px-3 rounded-xl text-xs font-bold transition duration-300 shadow-md"
+                  :disabled="product.stock !== null && product.stock <= 0"
+                  class="theme-btn flex-1 py-2 px-3 rounded-xl text-xs font-bold transition duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  + Keranjang
+                  {{ product.stock !== null && product.stock <= 0 ? 'Habis' : '+ Keranjang' }}
                 </button>
               </div>
             </div>
@@ -254,6 +269,17 @@
                 <h2 class="text-xl sm:text-2xl font-extrabold leading-tight" :style="{ color: 'var(--text-primary)' }">
                   {{ selectedProduct.name }}
                 </h2>
+                <!-- Stock Info -->
+                <div class="mt-2 text-xs font-semibold text-muted flex items-center gap-1.5">
+                  <span>📦</span>
+                  <span v-if="selectedProduct.stock !== null && selectedProduct.stock !== undefined">
+                    Stok: 
+                    <span :class="selectedProduct.stock <= 0 ? 'text-red-400 font-extrabold' : 'text-slate-300 font-bold'">
+                      {{ selectedProduct.stock <= 0 ? 'Habis' : `${selectedProduct.stock} ${selectedProduct.unit || 'pcs'}` }}
+                    </span>
+                  </span>
+                  <span v-else>Stok: <span class="text-slate-300 font-bold">Tersedia</span></span>
+                </div>
               </div>
 
               <!-- Price & Tiers -->
@@ -267,7 +293,7 @@
                       class="tier-row flex justify-between items-center p-2 rounded"
                       :class="{ 'tier-active': isActiveTier(selectedProduct, tier, modalQty) }"
                     >
-                      <span>{{ tier.min_qty }}{{ tier.max_qty ? `–${tier.max_qty}` : '+' }} pcs</span>
+                      <span>{{ tier.min_qty }}{{ tier.max_qty ? `–${tier.max_qty}` : '+' }} {{ selectedProduct.unit || 'pcs' }}</span>
                       <span class="font-extrabold theme-accent-text">Rp {{ formatRupiah(tier.unit_price.toString()) }}</span>
                     </div>
                   </div>
@@ -275,6 +301,7 @@
                 <div v-else-if="tenant?.settings?.show_price !== false">
                   <p class="text-xs text-muted mb-1">Harga Satuan:</p>
                   <span class="text-xl font-extrabold theme-accent-text">Rp {{ formatRupiah(selectedProduct.price) }}</span>
+                  <span v-if="selectedProduct.unit" class="text-sm text-muted"> / {{ selectedProduct.unit }}</span>
                 </div>
               </div>
 
@@ -294,7 +321,7 @@
             <!-- Bottom Purchase Row -->
             <div class="pt-4 border-t" :style="{ borderColor: 'var(--border-color)' }">
               <!-- Active Calculated Price -->
-              <div v-if="selectedProduct.price_tiers?.length && tenant?.settings?.show_price !== false" class="flex justify-between items-center mb-3">
+              <div v-if="selectedProduct.price_tiers?.length && tenant?.settings?.show_price !== false && !(selectedProduct.stock !== null && selectedProduct.stock <= 0)" class="flex justify-between items-center mb-3">
                 <span class="text-xs text-muted">Harga satuan saat ini:</span>
                 <span class="text-sm font-extrabold theme-accent-text">
                   Rp {{ formatRupiah(resolvedPriceForSelected(selectedProduct, modalQty).toString()) }}
@@ -307,28 +334,31 @@
                   <button 
                     type="button" 
                     @click="modalQty = Math.max(1, modalQty - 1)"
-                    class="catalog-qty-btn w-8 h-8 rounded-lg font-bold text-base flex items-center justify-center transition"
+                    :disabled="selectedProduct.stock !== null && selectedProduct.stock <= 0"
+                    class="catalog-qty-btn w-8 h-8 rounded-lg font-bold text-base flex items-center justify-center transition disabled:opacity-50"
                   >−</button>
                   <span class="w-8 text-center text-sm font-extrabold" :style="{ color: 'var(--text-primary)' }">
-                    {{ modalQty }}
+                    {{ selectedProduct.stock !== null && selectedProduct.stock <= 0 ? 0 : modalQty }}
                   </span>
                   <button 
                     type="button" 
-                    @click="modalQty = modalQty + 1"
-                    class="catalog-qty-btn w-8 h-8 rounded-lg font-bold text-base flex items-center justify-center transition"
+                    @click="incrementModalQty"
+                    :disabled="selectedProduct.stock !== null && (modalQty >= selectedProduct.stock || selectedProduct.stock <= 0)"
+                    class="catalog-qty-btn w-8 h-8 rounded-lg font-bold text-base flex items-center justify-center transition disabled:opacity-50"
                   >+</button>
                 </div>
 
                 <!-- Total price & Add button -->
                 <div class="flex-1 text-right">
-                  <div v-if="tenant?.settings?.show_price !== false" class="text-[10px] text-muted mb-1">
+                  <div v-if="tenant?.settings?.show_price !== false && !(selectedProduct.stock !== null && selectedProduct.stock <= 0)" class="text-[10px] text-muted mb-1">
                     Total: <strong class="theme-accent-text text-sm">Rp {{ formatRupiah((resolvedPriceForSelected(selectedProduct, modalQty) * modalQty).toString()) }}</strong>
                   </div>
                   <button 
                     @click="addSelectedToCart"
-                    class="theme-btn py-2.5 px-4 rounded-xl text-xs font-bold transition duration-300 w-full"
+                    :disabled="selectedProduct.stock !== null && selectedProduct.stock <= 0"
+                    class="theme-btn py-2.5 px-4 rounded-xl text-xs font-bold transition duration-300 w-full disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
-                    + Keranjang
+                    {{ selectedProduct.stock !== null && selectedProduct.stock <= 0 ? 'Stok Habis' : '+ Keranjang' }}
                   </button>
                 </div>
               </div>
@@ -420,10 +450,25 @@ function getQty(productId: number): number {
   return productQty[productId] ?? 1;
 }
 function incrementQty(productId: number) {
-  productQty[productId] = getQty(productId) + 1;
+  const product = store.products.find(p => p.id === productId);
+  const currentQty = getQty(productId);
+  if (product && product.stock !== null && product.stock !== undefined) {
+    if (currentQty >= product.stock) {
+      return;
+    }
+  }
+  productQty[productId] = currentQty + 1;
 }
 function decrementQty(productId: number) {
   productQty[productId] = Math.max(1, getQty(productId) - 1);
+}
+function incrementModalQty() {
+  if (selectedProduct.value && selectedProduct.value.stock !== null && selectedProduct.value.stock !== undefined) {
+    if (modalQty.value >= selectedProduct.value.stock) {
+      return;
+    }
+  }
+  modalQty.value++;
 }
 
 /** Resolve the current unit_price for a product given the selected qty */

@@ -50,6 +50,8 @@ export interface Product {
   image_url: string | null;
   show_image: boolean;
   price_tiers: PriceTier[];
+  stock: number | null;
+  unit: string | null;
 }
 
 export const useCatalogStore = defineStore('catalog', {

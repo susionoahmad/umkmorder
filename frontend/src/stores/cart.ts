@@ -9,6 +9,8 @@ export interface CartItem {
   price_tiers: PriceTier[]; // tier yang disimpan saat produk ditambahkan
   unit_price: number;       // harga satuan saat ini (resolved dari tier)
   quantity: number;
+  stock?: number | null;
+  unit?: string | null;
 }
 
 type OrderType = 'delivery' | 'pickup';
@@ -49,6 +51,8 @@ function normalizeCartItem(item: Partial<CartItem> & { price?: string | number }
     price_tiers: tiers,
     unit_price: unitPrice,
     quantity,
+    stock: item.stock !== undefined ? item.stock : null,
+    unit: item.unit || null,
   };
 }
 
@@ -150,26 +154,39 @@ export const useCartStore = defineStore('cart', {
         paymentPreference: this.paymentPreference,
       }));
     },
-    addToCart(product: { id: number; name: string; price: string; price_tiers?: PriceTier[] }, qty: number = 1) {
+    addToCart(product: { id: number; name: string; price: string; price_tiers?: PriceTier[]; stock?: number | null; unit?: string | null }, qty: number = 1) {
       const basePrice = parseFloat(product.price);
       const tiers     = product.price_tiers ?? [];
       const existing  = this.items.find(i => i.product_id === product.id);
 
+      const currentQty = existing ? existing.quantity : 0;
+      let targetQty = currentQty + qty;
+
+      if (product.stock !== undefined && product.stock !== null) {
+        if (targetQty > product.stock) {
+          targetQty = product.stock;
+        }
+      }
+
+      const finalAddedQty = targetQty - currentQty;
+      if (finalAddedQty <= 0) return;
+
       if (existing) {
-        existing.quantity  += qty;
-        // Recalculate unit_price for new quantity
+        existing.quantity   = targetQty;
         existing.base_price = toNumber(existing.base_price, basePrice);
         existing.price_tiers = Array.isArray(existing.price_tiers) ? existing.price_tiers : [];
         existing.unit_price = resolveUnitPrice(existing.price_tiers, existing.base_price, existing.quantity);
       } else {
-        const unitPrice = resolveUnitPrice(tiers, basePrice, qty);
+        const unitPrice = resolveUnitPrice(tiers, basePrice, finalAddedQty);
         this.items.push({
           product_id:  product.id,
           name:        product.name,
           base_price:  basePrice,
           price_tiers: tiers,
           unit_price:  unitPrice,
-          quantity:    qty,
+          quantity:    finalAddedQty,
+          stock:       product.stock !== undefined ? product.stock : null,
+          unit:        product.unit || null,
         });
       }
       this.persist();
@@ -181,7 +198,13 @@ export const useCartStore = defineStore('cart', {
     updateQuantity(productId: number, qty: number) {
       const item = this.items.find(i => i.product_id === productId);
       if (item) {
-        item.quantity   = Math.max(1, qty);
+        let targetQty = Math.max(1, qty);
+        if (item.stock !== undefined && item.stock !== null) {
+          if (targetQty > item.stock) {
+            targetQty = item.stock;
+          }
+        }
+        item.quantity   = targetQty;
         // Recalculate unit_price whenever quantity changes
         item.base_price = toNumber(item.base_price, toNumber(item.unit_price));
         item.price_tiers = Array.isArray(item.price_tiers) ? item.price_tiers : [];

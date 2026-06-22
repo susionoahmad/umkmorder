@@ -182,7 +182,7 @@
                 class="flex justify-between text-sm py-2 px-3 rounded-xl"
                 :style="{ backgroundColor: 'var(--bg-surface-alt)', border: '1px solid var(--border-color)' }"
               >
-                <span :style="{ color: 'var(--text-secondary)' }">{{ item.product?.name }} <span :style="{ color: 'var(--text-muted)' }">x{{ item.quantity }}</span></span>
+                <span :style="{ color: 'var(--text-secondary)' }">{{ item.product?.name }} <span :style="{ color: 'var(--text-muted)' }">x{{ item.quantity }} {{ item.product?.unit || 'pcs' }}</span></span>
                 <span class="font-bold" :style="{ color: 'var(--text-secondary)' }">Rp {{ formatRupiah(item.total) }}</span>
               </div>
             </div>

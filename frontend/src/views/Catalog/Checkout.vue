@@ -28,7 +28,7 @@
                 <h4 class="font-bold text-sm truncate" :style="{ color: 'var(--text-primary)' }">{{ item.name }}</h4>
                 <div class="flex items-center gap-2 mt-1 flex-wrap">
                   <p class="theme-accent-text font-extrabold text-xs">
-                    Rp {{ formatRupiah(itemUnitPrice(item)) }}/item
+                    Rp {{ formatRupiah(itemUnitPrice(item)) }} / {{ item.unit || 'pcs' }}
                   </p>
                   <span v-if="item.price_tiers && item.price_tiers.length > 0"
                         class="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
@@ -36,6 +36,9 @@
                     Harga Grosir
                   </span>
                 </div>
+                <p class="text-[10px] text-muted mt-0.5" v-if="item.stock !== null && item.stock !== undefined">
+                  Tersedia: {{ item.stock }} {{ item.unit || 'pcs' }}
+                </p>
                 <p class="text-xs font-semibold mt-1" :style="{ color: 'var(--text-secondary)' }">
                   Subtotal: Rp {{ formatRupiah(itemSubtotal(item)) }}
                 </p>
@@ -48,7 +51,8 @@
                 <span class="w-6 text-center text-sm font-extrabold" :style="{ color: 'var(--text-primary)' }">{{ item.quantity }}</span>
                 <button type="button"
                   @click="cartStore.updateQuantity(item.product_id, item.quantity + 1)"
-                  class="qty-btn w-8 h-8 rounded-lg font-bold flex items-center justify-center transition">+</button>
+                  :disabled="item.stock !== null && item.stock !== undefined && item.quantity >= item.stock"
+                  class="qty-btn w-8 h-8 rounded-lg font-bold flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed">+</button>
                 <button type="button"
                   @click="cartStore.removeFromCart(item.product_id)"
                   class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center transition ml-1"

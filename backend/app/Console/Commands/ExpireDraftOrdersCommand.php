@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Order;
+use App\Services\OrderService;
 use Carbon\Carbon;
 
 class ExpireDraftOrdersCommand extends Command
@@ -25,12 +26,22 @@ class ExpireDraftOrdersCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(OrderService $orderService)
     {
-        $count = Order::withoutGlobalScopes()
+        $expiredOrders = Order::withoutGlobalScopes()
             ->where('status', 'draft')
             ->where('expires_at', '<', Carbon::now())
-            ->update(['status' => 'expired']);
+            ->get();
+
+        $count = 0;
+        foreach ($expiredOrders as $order) {
+            try {
+                $orderService->updateStatus($order->id, 'expired', null);
+                $count++;
+            } catch (\Exception $e) {
+                $this->error("Failed to expire order #{$order->id}: " . $e->getMessage());
+            }
+        }
 
         $this->info("Expired {$count} draft orders successfully.");
     }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\OrderStatusLog;
 use App\Models\Receivable;
+use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -28,6 +29,17 @@ class OrderService
 
             // Catat log perubahan status jika statusnya berubah
             if ($order->status !== $newStatus) {
+                $activeStates = ['draft', 'new', 'processing', 'shipped', 'completed'];
+                
+                $wasActive = in_array($order->status, $activeStates);
+                $isNowActive = in_array($newStatus, $activeStates);
+
+                if ($wasActive && !$isNowActive) {
+                    $this->restoreStock($order);
+                } elseif (!$wasActive && $isNowActive) {
+                    $this->occupyStock($order);
+                }
+
                 OrderStatusLog::create([
                     'order_id' => $order->id,
                     'old_status' => $order->status,
@@ -95,5 +107,35 @@ class OrderService
 
             return $order;
         });
+    }
+
+    private function restoreStock(Order $order): void
+    {
+        $order->loadMissing('items.product');
+        foreach ($order->items as $item) {
+            $product = $item->product;
+            if ($product && $product->stock !== null) {
+                Product::withoutGlobalScopes()
+                    ->where('id', $product->id)
+                    ->increment('stock', $item->quantity);
+            }
+        }
+    }
+
+    private function occupyStock(Order $order): void
+    {
+        $order->loadMissing('items.product');
+        foreach ($order->items as $item) {
+            $product = Product::withoutGlobalScopes()
+                ->where('id', $item->product_id)
+                ->lockForUpdate()
+                ->first();
+            if ($product && $product->stock !== null) {
+                if ($product->stock < $item->quantity) {
+                    throw new \Exception("Stok untuk produk '{$product->name}' tidak mencukupi. Tersedia: {$product->stock}");
+                }
+                $product->decrement('stock', $item->quantity);
+            }
+        }
     }
 }

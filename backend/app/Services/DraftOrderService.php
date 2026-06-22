@@ -57,7 +57,15 @@ class DraftOrderService
                     ->with('priceTiers')
                     ->where('tenant_id', $tenant->id)
                     ->where('id', $item['product_id'])
+                    ->lockForUpdate()
                     ->firstOrFail();
+
+                if ($product->stock !== null) {
+                    if ($product->stock < $item['quantity']) {
+                        throw new \Exception("Stok untuk produk '{$product->name}' tidak mencukupi. Tersedia: {$product->stock}");
+                    }
+                    $product->decrement('stock', $item['quantity']);
+                }
 
                 // Resolve tier price based on quantity
                 $pricing = $this->pricingService->calculatePrice($product, (int) $item['quantity']);
@@ -145,7 +153,8 @@ class DraftOrderService
 
         foreach ($order->items as $item) {
             $subtotalFormatted = number_format($item->total, 0, ',', '.');
-            $message .= "- {$item->product->name} x {$item->quantity} (Rp {$subtotalFormatted})\n";
+            $unit = $item->product->unit ?: 'pcs';
+            $message .= "- {$item->product->name} x {$item->quantity} {$unit} (Rp {$subtotalFormatted})\n";
         }
 
         $subtotalFormatted  = number_format($order->subtotal, 0, ',', '.');

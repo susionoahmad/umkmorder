@@ -12,6 +12,8 @@ export interface AuthTenant {
   id: number;
   name: string;
   slug: string;
+  phone?: string | null;
+  address?: string | null;
   subscription_plan?: string | null;
   catalog_setting?: {
     id: number;

@@ -110,16 +110,29 @@
 
     <!-- Order Detail Modal -->
     <div v-if="showModal && activeOrder" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm" :style="themeVars">
-      <div class="rounded-3xl p-8 max-w-lg w-full shadow-2xl space-y-6 max-h-[85vh] overflow-y-auto" :style="{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-color)' }">
-        <div class="flex justify-between items-start">
+      <div class="rounded-3xl p-8 max-w-lg w-full shadow-2xl space-y-6 max-h-[85vh] overflow-y-auto flex flex-col" :style="{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-color)' }">
+        
+        <!-- Modal Header -->
+        <div class="flex justify-between items-start shrink-0 no-print">
           <div>
             <h3 class="text-2xl font-black" :style="{ color: 'var(--text-primary)' }">{{ activeOrder.invoice_number }}</h3>
             <p class="text-xs mt-1" :style="{ color: 'var(--text-muted)' }">Status: <span class="capitalize font-bold">{{ activeOrder.status }}</span></p>
           </div>
-          <button @click="closeModal" class="text-xl font-bold transition" :style="{ color: 'var(--text-secondary)' }">×</button>
+          <div class="flex items-center gap-3">
+            <button 
+              v-if="isLunasAndCompleted" 
+              @click="toggleReceiptMode"
+              class="py-1.5 px-3 rounded-xl border text-xs font-bold transition-all duration-200"
+              :class="showReceiptMode ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/40 hover:bg-indigo-500/30' : 'bg-slate-800 hover:bg-slate-750 text-indigo-400 border-slate-700'"
+            >
+              {{ showReceiptMode ? '⬅️ Detail' : '🧾 Struk/Invoice' }}
+            </button>
+            <button @click="closeModal" class="text-xl font-bold transition" :style="{ color: 'var(--text-secondary)' }">×</button>
+          </div>
         </div>
 
-        <div class="space-y-4 border-t pt-4" :style="{ borderColor: 'var(--border-color)' }">
+        <!-- Normal Details Content -->
+        <div v-if="!showReceiptMode" class="space-y-4 border-t pt-4 overflow-y-auto pr-1 flex-1" :style="{ borderColor: 'var(--border-color)' }">
           <!-- Customer Details -->
           <div>
             <h4 class="text-xs font-bold uppercase tracking-wider" :style="{ color: 'var(--text-muted)' }">Detail Pelanggan</h4>
@@ -209,13 +222,117 @@
           </div>
         </div>
 
-        <button
-          @click="closeModal"
-          class="w-full py-3.5 px-4 rounded-xl font-bold text-sm transition"
-          :style="{ backgroundColor: 'var(--bg-surface-alt)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }"
-        >
-          Tutup
-        </button>
+        <!-- Receipt / Struk Content -->
+        <div v-else class="printable-receipt-area bg-slate-950 border border-slate-850 rounded-2xl p-6 font-mono text-[11px] text-slate-300 relative overflow-y-auto flex-1 select-text" :style="{ borderColor: 'var(--border-color)' }">
+          <!-- LUNAS Watermark Stamp -->
+          <div class="watermark absolute right-6 bottom-24 border-4 border-emerald-500 text-emerald-500 font-extrabold text-xl uppercase px-3 py-1.5 rounded-xl rotate-[-12deg] opacity-60 select-none pointer-events-none">
+            LUNAS
+          </div>
+
+          <!-- Header -->
+          <div class="text-center space-y-1">
+            <h4 class="text-sm font-black text-slate-100 uppercase">{{ authStore.tenant?.name || 'Toko Kami' }}</h4>
+            <p class="text-[10px] text-slate-500">{{ authStore.tenant?.address || '' }}</p>
+            <p class="text-[10px] text-slate-500">WA: {{ authStore.tenant?.phone || '' }}</p>
+          </div>
+
+          <!-- Divider -->
+          <div class="divider border-b border-dashed border-slate-800 my-3"></div>
+
+          <!-- Info -->
+          <div class="space-y-1 text-slate-400">
+            <div class="flex justify-between">
+              <span>No Invoice:</span>
+              <span class="font-bold text-slate-200">{{ activeOrder.invoice_number }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Tanggal:</span>
+              <span>{{ formatDate(activeOrder.order_date) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Pelanggan:</span>
+              <span>{{ activeOrder.customer?.name || '-' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>WhatsApp:</span>
+              <span>{{ activeOrder.customer?.whatsapp || '-' }}</span>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="divider border-b border-dashed border-slate-800 my-3"></div>
+
+          <!-- Items -->
+          <div class="space-y-2">
+            <div v-for="item in activeOrder.items" :key="item.id" class="space-y-0.5">
+              <div class="text-slate-200 font-bold text-[11px]">{{ item.product?.name }}</div>
+              <div class="flex justify-between text-slate-500 text-[10px]">
+                <span>{{ item.quantity }} {{ item.product?.unit || 'pcs' }} x Rp {{ formatRupiah(item.price || (item.total / item.quantity)) }}</span>
+                <span class="text-slate-300 font-bold">Rp {{ formatRupiah(item.total) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="divider border-b border-dashed border-slate-800 my-3"></div>
+
+          <!-- Totals -->
+          <div class="space-y-1 text-slate-400">
+            <div class="flex justify-between">
+              <span>Subtotal:</span>
+              <span>Rp {{ formatRupiah(activeOrder.subtotal) }}</span>
+            </div>
+            <div v-if="parseFloat(activeOrder.discount) > 0" class="flex justify-between">
+              <span>Diskon:</span>
+              <span>- Rp {{ formatRupiah(activeOrder.discount) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Ongkos Kirim:</span>
+              <span>Rp {{ formatRupiah(activeOrder.shipping_cost) }}</span>
+            </div>
+            <div class="border-b border-dotted border-slate-850 my-1.5"></div>
+            <div class="flex justify-between text-xs font-black text-slate-100">
+              <span>TOTAL BAYAR:</span>
+              <span :style="{ color: 'var(--theme-primary)' }">Rp {{ formatRupiah(activeOrder.grand_total) }}</span>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="divider border-b border-dashed border-slate-800 my-3"></div>
+
+          <!-- Footer/Payment Method Info -->
+          <div class="text-center space-y-2 text-[9px] text-slate-500">
+            <p>Metode Pembayaran: <span class="uppercase font-bold text-slate-400">{{ getPaymentMethodName(activeOrder) }}</span></p>
+            <p class="mt-4 font-bold text-slate-450 tracking-wider">--- Terima Kasih ---</p>
+            <p>Pesanan Anda Telah Lunas & Diterima</p>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="flex flex-col gap-3 sticky bottom-0 pt-4 bg-slate-900 border-t border-slate-850 no-print shrink-0" :style="{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-color)' }">
+          <div v-if="showReceiptMode" class="flex gap-4">
+            <button 
+              @click="printReceipt"
+              class="flex-1 py-3 px-4 rounded-xl border hover:bg-slate-850 transition font-bold text-sm text-slate-300 flex items-center justify-center gap-2"
+              :style="{ backgroundColor: 'var(--bg-surface-alt)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }"
+            >
+              🖨️ Cetak Struk
+            </button>
+            <button 
+              @click="sendReceiptViaWhatsApp(activeOrder)"
+              class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 transition font-bold text-sm text-white flex items-center justify-center gap-2"
+            >
+              💬 Kirim Struk
+            </button>
+          </div>
+          <button
+            @click="closeModal"
+            class="w-full py-3.5 px-4 rounded-xl font-bold text-sm transition"
+            :style="{ backgroundColor: 'var(--bg-surface-alt)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }"
+          >
+            Tutup
+          </button>
+        </div>
       </div>
     </div>
 
@@ -345,6 +462,82 @@ const orders = ref([] as any[]);
 // Detail Modal
 const showModal = ref(false);
 const activeOrder = ref(null as any);
+const showReceiptMode = ref(false);
+
+const isLunasAndCompleted = computed(() => {
+  if (!activeOrder.value) return false;
+  return activeOrder.value.status === 'completed' && 
+         (!activeOrder.value.receivable || activeOrder.value.receivable.status === 'paid');
+});
+
+function toggleReceiptMode() {
+  showReceiptMode.value = !showReceiptMode.value;
+}
+
+function getPaymentMethodName(order: any): string {
+  if (order.payments && order.payments.length > 0) {
+    const methods = order.payments.map((p: any) => {
+      const m = p.payment_method || '';
+      if (m === 'cash') return 'Tunai';
+      if (m === 'transfer') return 'Transfer Bank';
+      if (m === 'qris') return 'QRIS';
+      if (m === 'credit') return 'Kredit';
+      return m;
+    });
+    return [...new Set(methods)].join(', ');
+  }
+  return formatPaymentPreference(order.payment_preference);
+}
+
+function buildReceiptMessage(order: any): string {
+  const tenant = authStore.tenant as any;
+  const lines = [
+    `🧾 *STRUK PEMBAYARAN LUNAS*`,
+    `*${tenant?.name || 'Toko Kami'}*`,
+    `----------------------------------------`,
+    `No Invoice: ${order.invoice_number}`,
+    `Tanggal   : ${formatDate(order.order_date)}`,
+    `Pelanggan : ${order.customer?.name || '-'}`,
+    `----------------------------------------`,
+  ];
+
+  order.items.forEach((item: any) => {
+    const unit = item.product?.unit || 'pcs';
+    const subtotalFormatted = formatRupiah(item.total);
+    const priceFormatted = formatRupiah(item.price || (item.total / item.quantity));
+    lines.push(`*${item.product?.name || 'Produk'}*`);
+    lines.push(`  ${item.quantity} ${unit} x Rp ${priceFormatted} = Rp ${subtotalFormatted}`);
+  });
+
+  lines.push(`----------------------------------------`);
+  lines.push(`Subtotal  : Rp ${formatRupiah(order.subtotal)}`);
+  if (parseFloat(order.discount) > 0) {
+    lines.push(`Diskon    : - Rp ${formatRupiah(order.discount)}`);
+  }
+  lines.push(`Ongkir    : Rp ${formatRupiah(order.shipping_cost)}`);
+  lines.push(`----------------------------------------`);
+  lines.push(`*TOTAL     : Rp ${formatRupiah(order.grand_total)}*`);
+  lines.push(`*Metode    : ${getPaymentMethodName(order)}*`);
+  lines.push(`*Status    : LUNAS ✅*`);
+  lines.push(`----------------------------------------`);
+  lines.push(`Terima kasih telah berbelanja di toko kami! 🙏`);
+
+  return lines.join('\n');
+}
+
+function sendReceiptViaWhatsApp(order: any) {
+  const phone = normalizePhone(order.customer?.whatsapp);
+  if (!phone) {
+    alert('Nomor WhatsApp pelanggan tidak tersedia.');
+    return;
+  }
+  const message = buildReceiptMessage(order);
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+function printReceipt() {
+  window.print();
+}
 
 // Payment Status Selection Modal
 const showPaymentStatusModal = ref(false);
@@ -403,6 +596,7 @@ async function openDetails(id: number) {
     const response = await api.get(`/orders/${id}`);
     if (response.data.status === 'success') {
       activeOrder.value = response.data.data;
+      showReceiptMode.value = false;
       showModal.value = true;
     }
   } catch (err: any) {
@@ -413,6 +607,7 @@ async function openDetails(id: number) {
 function closeModal() {
   showModal.value = false;
   activeOrder.value = null;
+  showReceiptMode.value = false;
   if (route.query.open) {
     router.replace({ query: { ...route.query, open: undefined } });
   }
@@ -650,4 +845,56 @@ function getStatusClass(status: string): string {
 </script>
 
 <style scoped>
+@media print {
+  /* Hide all dashboard/modal container wrappers */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only the receipt and its content */
+  .printable-receipt-area,
+  .printable-receipt-area * {
+    visibility: visible !important;
+  }
+  
+  /* Position the receipt at the top left and span full width of the page */
+  .printable-receipt-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: white !important;
+    color: black !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Force display colors on background for printing */
+  .printable-receipt-area * {
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide print buttons */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Custom styling for receipt divider and watermark in print */
+  .printable-receipt-area .divider {
+    border-color: #000 !important;
+  }
+  
+  .printable-receipt-area .watermark {
+    border-color: #10b981 !important;
+    color: #10b981 !important;
+    opacity: 0.4 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
 </style>

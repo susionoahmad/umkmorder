@@ -120,7 +120,7 @@
           </div>
           <div class="flex items-center gap-3">
             <button 
-              v-if="isLunasAndCompleted" 
+              v-if="isReceiptAvailable" 
               @click="toggleReceiptMode"
               class="py-1.5 px-3 rounded-xl border text-xs font-bold transition-all duration-200"
               :class="showReceiptMode ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/40 hover:bg-indigo-500/30' : 'bg-slate-800 hover:bg-slate-750 text-indigo-400 border-slate-700'"
@@ -224,9 +224,12 @@
 
         <!-- Receipt / Struk Content -->
         <div v-else class="printable-receipt-area bg-slate-950 border border-slate-850 rounded-2xl p-6 font-mono text-[11px] text-slate-300 relative overflow-y-auto flex-1 select-text" :style="{ borderColor: 'var(--border-color)' }">
-          <!-- LUNAS Watermark Stamp -->
-          <div class="watermark absolute right-6 bottom-24 border-4 border-emerald-500 text-emerald-500 font-extrabold text-xl uppercase px-3 py-1.5 rounded-xl rotate-[-12deg] opacity-60 select-none pointer-events-none">
-            LUNAS
+          <!-- Watermark Stamp -->
+          <div 
+            class="watermark absolute right-6 bottom-24 border-4 font-extrabold text-xl uppercase px-3 py-1.5 rounded-xl rotate-[-12deg] opacity-60 select-none pointer-events-none"
+            :class="receiptStamp.class"
+          >
+            {{ receiptStamp.text }}
           </div>
 
           <!-- Header -->
@@ -297,14 +300,37 @@
             </div>
           </div>
 
+          <!-- Payment History (Installments/Debt) -->
+          <div v-if="activeOrder.receivable" class="space-y-1.5 text-slate-400 text-[10px]">
+            <div class="divider border-b border-dashed border-slate-800 my-3"></div>
+            
+            <div v-if="activeOrder.payments && activeOrder.payments.length > 0" class="space-y-1.5">
+              <div class="font-bold text-slate-200 text-[11px]">Riwayat Pembayaran:</div>
+              <div v-for="payment in activeOrder.payments" :key="payment.id" class="flex justify-between">
+                <span>- {{ formatDate(payment.payment_date) }} ({{ formatPaymentMethodName(payment.payment_method) }}):</span>
+                <span>Rp {{ formatRupiah(payment.amount) }}</span>
+              </div>
+              <div class="border-b border-dotted border-slate-850 my-1"></div>
+            </div>
+            
+            <div class="flex justify-between">
+              <span>Total Terbayar:</span>
+              <span class="font-bold text-slate-350">Rp {{ formatRupiah(activeOrder.receivable.paid_amount) }}</span>
+            </div>
+            <div class="flex justify-between text-[11px]">
+              <span>Sisa Piutang:</span>
+              <span class="font-black text-slate-200">Rp {{ formatRupiah(activeOrder.receivable.remaining_amount) }}</span>
+            </div>
+          </div>
+
           <!-- Divider -->
           <div class="divider border-b border-dashed border-slate-800 my-3"></div>
 
           <!-- Footer/Payment Method Info -->
           <div class="text-center space-y-2 text-[9px] text-slate-500">
-            <p>Metode Pembayaran: <span class="uppercase font-bold text-slate-400">{{ getPaymentMethodName(activeOrder) }}</span></p>
+            <p v-if="!activeOrder.receivable">Metode Pembayaran: <span class="uppercase font-bold text-slate-400">{{ getPaymentMethodName(activeOrder) }}</span></p>
             <p class="mt-4 font-bold text-slate-450 tracking-wider">--- Terima Kasih ---</p>
-            <p>Pesanan Anda Telah Lunas & Diterima</p>
+            <p>Simpan Struk Ini Sebagai Bukti Pembayaran</p>
           </div>
         </div>
 
@@ -464,10 +490,29 @@ const showModal = ref(false);
 const activeOrder = ref(null as any);
 const showReceiptMode = ref(false);
 
-const isLunasAndCompleted = computed(() => {
+const isReceiptAvailable = computed(() => {
   if (!activeOrder.value) return false;
-  return activeOrder.value.status === 'completed' && 
-         (!activeOrder.value.receivable || activeOrder.value.receivable.status === 'paid');
+  return activeOrder.value.status === 'completed';
+});
+
+const receiptStamp = computed(() => {
+  if (!activeOrder.value) return { text: '', class: '' };
+  
+  const rec = activeOrder.value.receivable;
+  if (!rec) {
+    return { text: 'LUNAS', class: 'border-emerald-500 text-emerald-500' };
+  }
+  
+  if (rec.status === 'paid' || parseFloat(rec.remaining_amount) <= 0) {
+    return { text: 'LUNAS', class: 'border-emerald-500 text-emerald-500' };
+  }
+  
+  const paid = parseFloat(rec.paid_amount) || 0;
+  if (paid > 0) {
+    return { text: 'CICILAN', class: 'border-amber-500 text-amber-500' };
+  }
+  
+  return { text: 'BELUM LUNAS', class: 'border-red-500 text-red-500' };
 });
 
 function toggleReceiptMode() {
@@ -489,10 +534,20 @@ function getPaymentMethodName(order: any): string {
   return formatPaymentPreference(order.payment_preference);
 }
 
+function formatPaymentMethodName(method?: string): string {
+  const map: Record<string, string> = {
+    cash: 'Tunai',
+    transfer: 'Transfer Bank',
+    qris: 'QRIS',
+    credit: 'Kredit',
+  };
+  return map[method || ''] || method || '-';
+}
+
 function buildReceiptMessage(order: any): string {
   const tenant = authStore.tenant as any;
   const lines = [
-    `🧾 *STRUK PEMBAYARAN LUNAS*`,
+    `🧾 *STRUK PEMBAYARAN*`,
     `*${tenant?.name || 'Toko Kami'}*`,
     `----------------------------------------`,
     `No Invoice: ${order.invoice_number}`,
@@ -517,8 +572,25 @@ function buildReceiptMessage(order: any): string {
   lines.push(`Ongkir    : Rp ${formatRupiah(order.shipping_cost)}`);
   lines.push(`----------------------------------------`);
   lines.push(`*TOTAL     : Rp ${formatRupiah(order.grand_total)}*`);
-  lines.push(`*Metode    : ${getPaymentMethodName(order)}*`);
-  lines.push(`*Status    : LUNAS ✅*`);
+
+  // Payments and remaining debt history
+  const rec = order.receivable;
+  if (rec) {
+    if (order.payments && order.payments.length > 0) {
+      lines.push(`----------------------------------------`);
+      lines.push(`*RIWAYAT PEMBAYARAN:*`);
+      order.payments.forEach((p: any) => {
+        lines.push(`- ${formatDate(p.payment_date)} (${formatPaymentMethodName(p.payment_method)}): Rp ${formatRupiah(p.amount)}`);
+      });
+      lines.push(`*TOTAL TERBAYAR: Rp ${formatRupiah(rec.paid_amount)}*`);
+    }
+    lines.push(`*SISA PIUTANG  : Rp ${formatRupiah(rec.remaining_amount)}*`);
+  } else {
+    lines.push(`*Metode    : ${getPaymentMethodName(order)}*`);
+  }
+  
+  const stampText = receiptStamp.value.text;
+  lines.push(`*Status    : ${stampText} ${stampText === 'LUNAS' ? '✅' : '📌'}*`);
   lines.push(`----------------------------------------`);
   lines.push(`Terima kasih telah berbelanja di toko kami! 🙏`);
 
@@ -889,9 +961,22 @@ function getStatusClass(status: string): string {
     border-color: #000 !important;
   }
   
-  .printable-receipt-area .watermark {
+  .printable-receipt-area .watermark.border-emerald-500 {
     border-color: #10b981 !important;
     color: #10b981 !important;
+  }
+  
+  .printable-receipt-area .watermark.border-amber-500 {
+    border-color: #f59e0b !important;
+    color: #f59e0b !important;
+  }
+  
+  .printable-receipt-area .watermark.border-red-500 {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+  }
+
+  .printable-receipt-area .watermark {
     opacity: 0.4 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;

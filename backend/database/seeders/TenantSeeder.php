@@ -27,7 +27,7 @@ class TenantSeeder extends Seeder
         $tenant1 = Tenant::create([
             'name' => 'Kurnia Telur',
             'slug' => 'kurnia-telur',
-            'logo' => null,
+            'logo' => '/kurnia-telur-logo.png',
             'phone' => '6281234567890',
             'address' => 'Jl. Raya Telur No. 5, Blitar',
             'subscription_plan' => 'pro',
@@ -40,7 +40,7 @@ class TenantSeeder extends Seeder
             'tenant_id' => $tenant1->id,
             'catalog_title' => 'Katalog Telur Asin Kurnia',
             'catalog_description' => 'Produsen telur asin premium gurih dan masir asli Blitar.',
-            'catalog_banner' => null,
+            'catalog_banner' => '/kurnia-telur-banner.png',
             'catalog_enabled' => true,
             'show_price' => true,
             'theme' => 'emerald',

@@ -280,7 +280,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import LandingNavbar from '@/components/LandingNavbar.vue';
@@ -294,6 +294,13 @@ const isScrolled = ref(false);
 const activeSection = ref('hero');
 const showDemoModal = ref(false);
 const isLoggingIn = ref(false);
+watch(showDemoModal, (val) => {
+  if (val) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+});
 
 function startCatalogDemo() {
   showDemoModal.value = false;
@@ -990,11 +997,10 @@ const plans = [
   inset: 0;
   z-index: 150;
   display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 24px;
   background: rgba(2, 6, 23, 0.75);
   backdrop-filter: blur(12px);
+  overflow-y: auto; /* Fix: allow scrolling if content is too tall */
 }
 
 .demo-modal-card {
@@ -1007,6 +1013,8 @@ const plans = [
   width: 100%;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.1);
   animation: modalScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: auto; /* Fix: ensures scrolling works correctly with flex centering */
+  max-height: max-content;
 }
 
 .close-btn {
@@ -1154,8 +1162,11 @@ const plans = [
 }
 
 @media (max-width: 640px) {
+  .demo-modal-overlay {
+    padding: 12px;
+  }
   .demo-modal-card {
-    padding: 24px;
+    padding: 24px 16px;
   }
   .demo-options-grid {
     grid-template-columns: 1fr;

@@ -1,6 +1,12 @@
 <template>
   <div class="catalog-page" :style="themeVars">
 
+    <!-- Demo Mode Top Banner -->
+    <div v-if="isDemoMode" class="demo-banner bg-amber-500 text-slate-950 text-xs font-bold text-center py-2.5 px-4 flex items-center justify-center gap-2">
+      <span>🔧</span>
+      <span><strong>Mode Demo Katalog:</strong> Anda sedang mensimulasikan proses pemesanan sebagai pelanggan. Silakan pilih produk, isi keranjang, dan lakukan checkout.</span>
+    </div>
+
     <!-- Banner Header -->
     <div
       class="catalog-banner relative overflow-hidden border-b py-8 sm:py-14 px-4 sm:px-10 lg:px-24"
@@ -377,6 +383,8 @@ import { useRoute } from 'vue-router';
 import { useCatalogStore } from '@/stores/catalog';
 import { useCartStore, resolveUnitPrice } from '@/stores/cart';
 import type { Product, PriceTier } from '@/stores/catalog';
+
+const isDemoMode = computed(() => sessionStorage.getItem('demo_mode') === 'true');
 
 // Product Detail Modal State
 const selectedProduct = ref<Product | null>(null);

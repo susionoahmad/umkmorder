@@ -275,7 +275,7 @@
 
           <div class="terms-check">
             <input type="checkbox" id="terms" v-model="form.agreeTerms" />
-            <label for="terms">Saya setuju dengan <a href="#">Syarat & Ketentuan</a> dan <a href="#">Kebijakan Privasi</a> UMKMOrder.</label>
+            <label for="terms">Saya setuju dengan <router-link to="/terms" target="_blank">Syarat & Ketentuan</router-link> dan <router-link to="/privacy" target="_blank">Kebijakan Privasi</router-link> UMKMOrder.</label>
           </div>
 
           <div class="btn-row">

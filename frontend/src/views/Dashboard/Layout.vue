@@ -251,6 +251,19 @@
 
       <!-- Dashboard View Port -->
       <main class="flex-1 overflow-y-auto p-6 md:p-8">
+        <!-- Demo Mode Warning Banner -->
+        <div v-if="isDemoDashboard" class="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-4 animate-[slide-in_0.3s_ease-out]">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">⚠️</span>
+            <div class="text-left">
+              <p class="text-xs font-bold text-amber-400">Mode Demo (Hanya Baca)</p>
+              <p class="text-[11px] text-slate-400">Anda sedang menjelajahi dashboard toko demo. Perubahan data tidak akan disimpan.</p>
+            </div>
+          </div>
+          <button @click="handleLogout" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl transition shrink-0">
+            Keluar Demo
+          </button>
+        </div>
         <router-view />
       </main>
     </div>
@@ -588,6 +601,8 @@ import api from '@/services/api';
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+
+const isDemoDashboard = computed(() => localStorage.getItem('demo_dashboard') === 'true');
 
 const isMobileMenuOpen = ref(false);
 

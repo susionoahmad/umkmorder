@@ -1,5 +1,11 @@
 <template>
   <div class="checkout-page" :style="themeVars">
+    <!-- Demo Mode Top Banner -->
+    <div v-if="isDemoMode" class="demo-banner bg-amber-500 text-slate-950 text-xs font-bold text-center py-2.5 px-4 flex items-center justify-center gap-2 mb-6 rounded-xl">
+      <span>🔧</span>
+      <span><strong>Mode Demo Katalog:</strong> Selesaikan formulir ini untuk melakukan simulasi checkout.</span>
+    </div>
+
     <div class="checkout-card max-w-xl mx-auto rounded-3xl p-8 shadow-xl backdrop-blur-md">
       <h2 class="text-3xl font-extrabold tracking-tight mb-8" :style="{ color: 'var(--text-primary)' }">
         📝 Form Pemesanan
@@ -295,6 +301,51 @@
           </div>
         </form>
       </div>
+    <!-- ========== DEMO SUCCESS MODAL ========== -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="showDemoSuccessModal" class="demo-success-overlay">
+          <div class="demo-success-card">
+            <div class="success-icon">🎉</div>
+            <h2>Demo Pemesanan Berhasil!</h2>
+            <div class="success-body">
+              <p>Pesanan simulasi Anda untuk toko <strong>{{ catalogStore.tenant?.name || 'Kurnia Telur' }}</strong> telah sukses dilakukan!</p>
+              
+              <div class="flow-explanation">
+                <div class="flow-step">
+                  <span class="step-num">1</span>
+                  <div class="step-info">
+                    <h4>Kirim Detail via WhatsApp</h4>
+                    <p>Dalam aplikasi nyata, tombol ini akan langsung membuka WhatsApp pelanggan dengan pesan otomatis berisi detail pesanan (produk, alamat, QRIS/pembayaran) untuk dikirim ke nomor WhatsApp Anda.</p>
+                  </div>
+                </div>
+                <div class="flow-step">
+                  <span class="step-num">2</span>
+                  <div class="step-info">
+                    <h4>Catat di Dashboard Bisnis</h4>
+                    <p>Secara bersamaan, pesanan akan masuk ke dashboard admin toko Anda untuk dikelola status pengiriman, pencatatan pembayaran (termasuk pembayaran tempo/piutang), serta laporan keuangan.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="next-step-box">
+                <p>💡 Mari lihat bagaimana pesanan ini diproses di Dashboard Toko!</p>
+              </div>
+            </div>
+
+            <div class="success-actions">
+              <button @click="goToDashboardDemo" class="btn-dashboard-go" :disabled="isLoggingIn">
+                <span v-if="isLoggingIn" class="mini-spinner"></span>
+                <span>{{ isLoggingIn ? 'Memproses...' : 'Masuk Dashboard Demo 📊' }}</span>
+              </button>
+              <button @click="exitDemo" class="btn-demo-exit">
+                Kembali ke Katalog
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
     </div>
   </div>
 </template>
@@ -304,12 +355,48 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cart';
 import { useCatalogStore } from '@/stores/catalog';
+import { useAuthStore } from '@/stores/auth';
 
 const route     = useRoute();
 const router    = useRouter();
 const slug      = route.params.slug as string;
 const cartStore = useCartStore();
 const catalogStore = useCatalogStore();
+const authStore = useAuthStore();
+
+const showDemoSuccessModal = ref(false);
+const isLoggingIn = ref(false);
+const isDemoMode = computed(() => sessionStorage.getItem('demo_mode') === 'true');
+
+async function goToDashboardDemo() {
+  if (isLoggingIn.value) return;
+  isLoggingIn.value = true;
+  try {
+    const success = await authStore.login({
+      email: 'owner1@kurniatelur.com',
+      password: 'password'
+    });
+    if (success) {
+      localStorage.setItem('demo_dashboard', 'true');
+      showDemoSuccessModal.value = false;
+      cartStore.clearCart();
+      router.push('/dashboard');
+    } else {
+      alert('Gagal masuk ke dashboard demo. Coba lagi nanti.');
+    }
+  } catch (err) {
+    alert('Terjadi kesalahan saat masuk ke dashboard demo.');
+  } finally {
+    isLoggingIn.value = false;
+  }
+}
+
+function exitDemo() {
+  showDemoSuccessModal.value = false;
+  cartStore.clearCart();
+  sessionStorage.removeItem('demo_mode');
+  router.push(`/${slug}`);
+}
 
 // ── Theme ────────────────────────────────────────────────────────────
 const THEMES: Record<string, {
@@ -526,6 +613,10 @@ watch(() => cartStore.selectedZone, () => {
 
 async function handleSubmit() {
   if (!slug) return;
+  if (isDemoMode.value) {
+    showDemoSuccessModal.value = true;
+    return;
+  }
   const result = await cartStore.checkout(slug);
   if (result) {
     sessionStorage.setItem(`order-success:${slug}`, JSON.stringify(result));
@@ -662,5 +753,183 @@ function formatRupiah(val: string | number): string {
 .total-box {
   background-color: var(--bg-surface-alt);
   border: 1px solid var(--border-color);
+}
+
+/* ===== DEMO SUCCESS MODAL ===== */
+.demo-success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(16px);
+}
+
+.demo-success-card {
+  background: #0d1526;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  padding: 36px;
+  max-width: 580px;
+  width: 100%;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.1);
+  text-align: center;
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, sans-serif;
+  animation: modalScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.success-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.demo-success-card h2 {
+  font-size: 24px;
+  font-weight: 850;
+  color: #f8fafc;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+}
+
+.success-body {
+  text-align: left;
+  margin-bottom: 28px;
+}
+
+.success-body p {
+  font-size: 14px;
+  color: #94a3b8;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.flow-explanation {
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.flow-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-info h4 {
+  font-size: 13.5px;
+  font-weight: 750;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.step-info p {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.next-step-box {
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  text-align: center;
+}
+
+.next-step-box p {
+  color: #a5b4fc;
+  font-weight: 600;
+  font-size: 13px;
+  margin: 0;
+}
+
+.success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-dashboard-go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+}
+.btn-dashboard-go:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 8px 28px rgba(99, 102, 241, 0.4);
+}
+.btn-dashboard-go:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-demo-exit {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-demo-exit:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #e2e8f0;
+}
+
+.mini-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: pulse 1s linear infinite;
+}
+
+@keyframes modalScaleUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 </style>

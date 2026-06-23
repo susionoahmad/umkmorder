@@ -8,7 +8,6 @@ const api = axios.create({
   },
 });
 
-// Auto inject Bearer token if stored in local storage
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
   if (token && config.headers) {
@@ -17,6 +16,19 @@ api.interceptors.request.use((config) => {
   if (config.data instanceof FormData && config.headers) {
     delete config.headers['Content-Type'];
   }
+
+  // Intercept writing requests in demo dashboard mode
+  if (localStorage.getItem('demo_dashboard') === 'true') {
+    const method = config.method?.toLowerCase();
+    if (method && ['post', 'put', 'patch', 'delete'].includes(method)) {
+      const url = config.url || '';
+      if (!url.includes('/login') && !url.includes('/logout') && !url.includes('/check-slug')) {
+        alert('Mode Demo (Hanya Baca): Perubahan data tidak diizinkan.');
+        return Promise.reject(new Error('Mode Demo (Hanya Baca): Aksi tulis tidak diizinkan.'));
+      }
+    }
+  }
+
   return config;
 });
 

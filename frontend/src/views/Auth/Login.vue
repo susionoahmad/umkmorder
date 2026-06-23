@@ -71,12 +71,12 @@
           </button>
         </form>
 
-        <div class="mt-8 text-center border-t border-slate-850 pt-6">
-          <p class="text-xs text-slate-600 leading-relaxed">
-            Gunakan kredensial demo:<br>
-            <span class="text-slate-500">owner1@kurniatelur.com</span> atau 
-            <span class="text-slate-500">owner2@sambalbusari.com</span><br>
-            dengan password <span class="text-slate-500">password</span>
+        <div class="mt-6 text-center">
+          <p class="text-sm text-slate-500">
+            Belum memiliki toko? 
+            <router-link to="/register" class="text-indigo-400 hover:text-indigo-300 hover:underline font-semibold transition-colors duration-200">
+              Daftar gratis sekarang
+            </router-link>
           </p>
         </div>
       </div>

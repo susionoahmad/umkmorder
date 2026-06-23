@@ -135,6 +135,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('auth_tenant');
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
+        localStorage.removeItem('demo_dashboard');
         
         this.isLoading = false;
       }

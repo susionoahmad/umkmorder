@@ -32,10 +32,10 @@
             {{ authStore.isAuthenticated ? 'Ke Dashboard' : 'Mulai Gratis Sekarang' }}
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </router-link>
-          <a href="#cara-kerja" class="btn-hero-ghost">
+          <button @click="showDemoModal = true" class="btn-hero-ghost cursor-pointer">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
             Lihat Demo
-          </a>
+          </button>
         </div>
         <p class="hero-note">✓ Gratis selamanya &nbsp;·&nbsp; ✓ Setup 5 menit &nbsp;·&nbsp; ✓ Tanpa kartu kredit</p>
 
@@ -227,20 +227,101 @@
         <path d="M18 15l-6-6-6 6"/>
       </svg>
     </a>
+
+    <!-- ========== DEMO SELECTOR MODAL ========== -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="showDemoModal" class="demo-modal-overlay" @click.self="showDemoModal = false">
+          <div class="demo-modal-card">
+            <button class="close-btn" @click="showDemoModal = false">✕</button>
+            <div class="demo-modal-header">
+              <h2>Pilih Demo UMKMOrder</h2>
+              <p>Coba langsung fitur platform kami dari sisi pelanggan maupun pemilik toko.</p>
+            </div>
+            
+            <div class="demo-options-grid">
+              <!-- Demo Katalog -->
+              <div class="demo-option-card">
+                <div class="demo-option-icon">🛍️</div>
+                <h3>Demo Katalog Toko</h3>
+                <p class="demo-option-desc">Simulasi proses belanja dari sudut pandang pelanggan Anda.</p>
+                <ul class="demo-feature-list">
+                  <li>✨ <strong>Produk:</strong> Lihat & pilih produk dengan harga grosir</li>
+                  <li>🛒 <strong>Keranjang:</strong> Atur jumlah pesanan</li>
+                  <li>📝 <strong>Checkout:</strong> Isi data pemesanan & alamat</li>
+                </ul>
+                <button @click="startCatalogDemo" class="btn-demo-action btn-dashboard-demo">
+                  Buka Demo Katalog
+                </button>
+              </div>
+
+              <!-- Demo Dashboard -->
+              <div class="demo-option-card">
+                <div class="demo-option-icon">📊</div>
+                <h3>Demo Dashboard Toko</h3>
+                <p class="demo-option-desc">Kelola bisnis Anda dari panel admin (Mode Hanya Baca).</p>
+                <ul class="demo-feature-list">
+                  <li>📈 <strong>Order:</strong> Lihat daftar pesanan masuk</li>
+                  <li>👥 <strong>Pelanggan:</strong> Pantau kontak & riwayat belanja</li>
+                  <li>💰 <strong>Piutang:</strong> Lacak piutang & pengingat WA</li>
+                  <li>📊 <strong>Laporan:</strong> Analisis grafik & tren penjualan</li>
+                </ul>
+                <button @click="startDashboardDemo" class="btn-demo-action btn-dashboard-demo" :disabled="isLoggingIn">
+                  <span v-if="isLoggingIn" class="mini-spinner"></span>
+                  <span>{{ isLoggingIn ? 'Memproses...' : 'Masuk Dashboard Demo' }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import LandingNavbar from '@/components/LandingNavbar.vue';
 import LandingFooter from '@/components/LandingFooter.vue';
 
 const authStore = useAuthStore();
+const router = useRouter();
 const currentHost = computed(() => typeof window !== 'undefined' ? window.location.host : 'umkmorder.id');
 
 const isScrolled = ref(false);
 const activeSection = ref('hero');
+const showDemoModal = ref(false);
+const isLoggingIn = ref(false);
+
+function startCatalogDemo() {
+  showDemoModal.value = false;
+  sessionStorage.setItem('demo_mode', 'true');
+  router.push('/kurnia-telur');
+}
+
+async function startDashboardDemo() {
+  if (isLoggingIn.value) return;
+  isLoggingIn.value = true;
+  try {
+    const success = await authStore.login({
+      email: 'owner1@kurniatelur.com',
+      password: 'password'
+    });
+    if (success) {
+      localStorage.setItem('demo_dashboard', 'true');
+      showDemoModal.value = false;
+      router.push('/dashboard');
+    } else {
+      alert('Gagal masuk ke dashboard demo. Coba lagi nanti.');
+    }
+  } catch (err) {
+    alert('Terjadi kesalahan saat masuk ke dashboard demo.');
+  } finally {
+    isLoggingIn.value = false;
+  }
+}
 
 const lastVisitedSlug = ref<string | null>(null);
 const lastVisitedName = ref<string | null>(null);
@@ -901,5 +982,184 @@ const plans = [
   .steps-grid { grid-template-columns: 1fr; }
   .pricing-grid { grid-template-columns: 1fr; }
   .footer-inner { flex-direction: column; text-align: center; }
+}
+
+/* ===== DEMO SELECTOR MODAL ===== */
+.demo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(12px);
+}
+
+.demo-modal-card {
+  position: relative;
+  background: #0d1526;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 780px;
+  width: 100%;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.1);
+  animation: modalScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.close-btn:hover {
+  color: #94a3b8;
+}
+
+.demo-modal-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.demo-modal-header h2 {
+  font-size: 26px;
+  font-weight: 850;
+  color: #f8fafc;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+.demo-modal-header p {
+  font-size: 15px;
+  color: #64748b;
+}
+
+.demo-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.demo-option-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 24px;
+  transition: all 0.25s;
+}
+.demo-option-card:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateY(-2px);
+}
+
+.demo-option-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+.demo-option-card h3 {
+  font-size: 18px;
+  font-weight: 750;
+  color: #f1f5f9;
+  margin-bottom: 8px;
+}
+
+.demo-option-desc {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  min-height: 38px;
+}
+
+.demo-feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.demo-feature-list li {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.demo-feature-list strong {
+  color: #cbd5e1;
+}
+
+.btn-demo-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-demo-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
+}
+
+.btn-dashboard-demo {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+}
+.btn-dashboard-demo:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+}
+.btn-dashboard-demo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mini-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: pulse 1s linear infinite;
+}
+
+@keyframes modalScaleUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 640px) {
+  .demo-modal-card {
+    padding: 24px;
+  }
+  .demo-options-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 </style>

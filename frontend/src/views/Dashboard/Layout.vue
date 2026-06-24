@@ -250,7 +250,7 @@
       </header>
 
       <!-- Dashboard View Port -->
-      <main class="flex-1 overflow-y-auto p-6 md:p-8">
+      <main class="flex-1 overflow-y-auto p-6 md:p-8 pb-24 md:pb-8">
         <!-- Demo Mode Warning Banner -->
         <div v-if="isDemoDashboard" class="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-4 animate-[slide-in_0.3s_ease-out]">
           <div class="flex items-center gap-3">
@@ -266,6 +266,32 @@
         </div>
         <router-view />
       </main>
+
+      <!-- Mobile Bottom Navigation -->
+      <nav class="md:hidden fixed bottom-6 left-6 right-6 z-40 bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-2xl px-2 shadow-2xl transition-all duration-300 theme-bottom-nav">
+        <div class="flex justify-around items-center h-16">
+          <router-link 
+            v-for="item in bottomNavItems" 
+            :key="item.path" 
+            :to="item.path" 
+            class="flex flex-col items-center justify-center gap-1 w-full h-full text-slate-400 transition-all duration-200 relative group"
+            exact-active-class="text-indigo-400 theme-active-bottom-nav"
+          >
+            <div class="relative transition-transform duration-200 group-active:scale-90">
+              <span class="text-xl">{{ item.icon }}</span>
+              <!-- Notification Badge for Orders -->
+              <span 
+                v-if="item.path === '/dashboard/orders' && unprocessedCount > 0" 
+                class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-slate-900 animate-pulse"
+              >
+                {{ unprocessedCount > 9 ? '9+' : unprocessedCount }}
+              </span>
+            </div>
+            <span class="text-[9px] font-bold uppercase tracking-tight opacity-80 current-label">{{ item.label }}</span>
+            <div class="active-indicator absolute -bottom-1 w-1 h-1 rounded-full bg-indigo-500 opacity-0 transition-all duration-300"></div>
+          </router-link>
+        </div>
+      </nav>
     </div>
 
     <!-- Floating Toast Notifications -->
@@ -698,6 +724,14 @@ const navItems = [
   { path: '/dashboard/receivables', label: 'Laporan', icon: '💰' },
   { path: '/dashboard/analytics', label: 'Analisis Katalog', icon: '📈' },
   { path: '/dashboard/catalog-online', label: 'Katalog Online', icon: '🌐' },
+];
+
+const bottomNavItems = [
+  { path: '/dashboard', label: 'Home', icon: '📊' },
+  { path: '/dashboard/products', label: 'Produk', icon: '🛍️' },
+  { path: '/dashboard/orders', label: 'Pesanan', icon: '📝' },
+  { path: '/dashboard/receivables', label: 'Laporan', icon: '💰' },
+  { path: '/dashboard/catalog-online', label: 'Katalog', icon: '🌐' },
 ];
 
 const unprocessedCount = ref(0);
@@ -1221,6 +1255,27 @@ async function handleLogout() {
 }
 .dashboard-root .theme-menu-trigger:hover {
   background-color: rgba(var(--theme-primary-rgb), 0.1) !important;
+}
+
+/* Bottom Nav Styling */
+.dashboard-root .theme-bottom-nav {
+  background-color: var(--bg-surface) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dashboard-root .theme-active-bottom-nav {
+  color: var(--theme-primary) !important;
+}
+
+.dashboard-root .theme-active-bottom-nav .current-label {
+  opacity: 1 !important;
+}
+
+.dashboard-root .theme-active-bottom-nav .active-indicator {
+  opacity: 1;
+  width: 4px;
+  background-color: var(--theme-primary);
+  box-shadow: 0 0 10px var(--theme-primary);
 }
 </style>
 

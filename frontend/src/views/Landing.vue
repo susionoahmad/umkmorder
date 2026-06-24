@@ -178,7 +178,7 @@
                 <span class="cross">x</span> {{ f }}
               </li>
             </ul>
-            <router-link :to="authStore.isAuthenticated ? '/dashboard' : '/register'" :class="plan.popular ? 'btn-hero-primary' : 'btn-outline price-btn'">
+            <router-link :to="authStore.isAuthenticated ? '/dashboard' : plan.link" :class="plan.popular ? 'btn-hero-primary' : 'btn-outline price-btn'">
               {{ authStore.isAuthenticated ? 'Ke Dashboard' : plan.cta }}
             </router-link>
           </div>
@@ -409,6 +409,7 @@ const plans = [
       'Lokasi Pengiriman (Google Maps)',
       'Ongkir Manual & Jarak',
     ],
+    link: '/register',
     restrictions: [
       'Manajemen Piutang',
       'Reminder WhatsApp',
@@ -438,6 +439,7 @@ const plans = [
       'Statistik Pengunjung Katalog',
       'Export Data',
     ],
+    link: '/register',
     restrictions: [],
   },
   {
@@ -459,6 +461,7 @@ const plans = [
       'Onboarding Pribadi',
       'Priority Support',
     ],
+    link: '/contact',
     restrictions: [],
   },
 ];
